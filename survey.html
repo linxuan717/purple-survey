@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>紫人（NT型人格）原生家庭与成长轨迹调查</title>
+<!-- Supabase JS 客户端已移除，改用 fetch 直接调用 REST API，无需外部 CDN -->
+<style>
+:root {
+  --bg: #0d0b1a;
+  --bg-card: rgba(139, 92, 246, 0.08);
+  --bg-card-hover: rgba(139, 92, 246, 0.15);
+  --primary: #a855f7;
+  --primary-light: #c084fc;
+  --accent: #8b5cf6;
+  --accent-dark: #7c3aed;
+  --text: #e9e7f0;
+  --text-muted: #9ca3af;
+  --text-dim: #6b7280;
+  --border: rgba(168, 85, 247, 0.2);
+  --border-active: rgba(168, 85, 247, 0.5);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  --danger: #ef4444;
+  --success: #10b981;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: linear-gradient(180deg, #0d0b1a 0%, #1a0f2e 50%, #0d0b1a 100%);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+}
+#progress-wrap {
+  position: fixed; top: 0; left: 0; right: 0; height: 4px;
+  background: rgba(255,255,255,0.05); z-index: 100;
+}
+#progress-bar {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--primary-light));
+  transition: width 0.4s ease;
+  border-radius: 0 4px 4px 0;
+}
+.container {
+  max-width: 580px; margin: 0 auto; padding: 60px 20px 40px;
+}
+.page { display: none; animation: fadeIn 0.5s ease; }
+.page.active { display: block; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* Intro */
+.intro-hero {
+  text-align: center; padding: 40px 0;
+}
+.intro-icon {
+  font-size: 56px; margin-bottom: 20px; display: block;
+}
+.intro-title {
+  font-size: 26px; font-weight: 800; margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--primary-light), var(--accent));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.intro-desc {
+  font-size: 15px; color: var(--text-muted); margin-bottom: 28px;
+  white-space: pre-line;
+}
+.intro-meta {
+  display: flex; justify-content: center; gap: 24px; margin-bottom: 32px;
+  font-size: 13px; color: var(--text-dim);
+}
+.intro-meta span { display: flex; align-items: center; gap: 6px; }
+/* Section title */
+.section-title {
+  font-size: 20px; font-weight: 700; margin-bottom: 6px;
+  color: var(--primary-light);
+}
+.section-sub {
+  font-size: 13px; color: var(--text-dim); margin-bottom: 24px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+.module-intro {
+  font-size: 14px; color: var(--text-muted); font-style: italic;
+  margin-bottom: 24px; padding: 14px 16px;
+  background: var(--bg-card); border-radius: var(--radius-sm);
+  border-left: 3px solid var(--accent);
+}
+/* Questions */
+.q-block {
+  margin-bottom: 28px;
+}
+.q-label {
+  font-size: 15px; font-weight: 600; margin-bottom: 12px;
+  display: flex; gap: 8px; align-items: flex-start;
+}
+.q-num {
+  color: var(--primary); font-weight: 800; flex-shrink: 0;
+}
+.q-hint {
+  font-size: 12px; color: var(--text-dim); margin-top: 4px;
+}
+/* Options */
+.option-list { display: flex; flex-direction: column; gap: 8px; }
+.option {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  cursor: pointer; transition: all 0.2s; font-size: 15px;
+  -webkit-user-select: none; user-select: none;
+}
+.option:hover, .option:active { background: var(--bg-card-hover); border-color: var(--border-active); }
+.option input { display: none; }
+.option .radio-dot, .option .check-box {
+  width: 20px; height: 20px; border: 2px solid var(--text-dim);
+  border-radius: 50%; flex-shrink: 0; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.option .check-box { border-radius: 5px; }
+.option input:checked ~ .radio-dot,
+.option input:checked ~ .check-box {
+  border-color: var(--primary); background: var(--primary);
+}
+.option input:checked ~ .radio-dot::after {
+  content: ''; width: 8px; height: 8px; border-radius: 50%; background: #fff;
+}
+.option input:checked ~ .check-box::after {
+  content: '✓'; color: #fff; font-size: 13px; font-weight: 700;
+}
+.option:has(input:checked) {
+  border-color: var(--primary); background: rgba(168, 85, 247, 0.12);
+}
+.option-text { flex: 1; }
+.other-input {
+  margin-top: 8px; width: 100%;
+  padding: 10px 14px; background: rgba(0,0,0,0.2);
+  border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); font-size: 14px; display: none;
+}
+.other-input.show { display: block; }
+.other-input:focus { outline: none; border-color: var(--primary); }
+/* Likert scale */
+.likert-group { margin-bottom: 20px; }
+.likert-q {
+  font-size: 14px; margin-bottom: 10px; line-height: 1.5;
+}
+.likert-q .likert-code {
+  color: var(--primary); font-weight: 700; margin-right: 6px;
+}
+.likert-scale {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 4px;
+}
+.likert-btn {
+  flex: 1; height: 40px; border: 2px solid var(--border);
+  background: var(--bg-card); border-radius: 10px;
+  font-size: 15px; font-weight: 700; color: var(--text-muted);
+  cursor: pointer; transition: all 0.2s; text-align: center;
+}
+.likert-btn:hover { border-color: var(--border-active); }
+.likert-btn.active {
+  border-color: var(--primary); background: var(--primary);
+  color: #fff;
+}
+.likert-labels {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: var(--text-dim); margin-top: 6px;
+}
+.likert-divider {
+  font-size: 12px; color: var(--text-dim); font-weight: 700;
+  margin: 24px 0 16px; padding: 8px 0;
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+/* Slider */
+.slider-wrap { padding: 10px 0; }
+.slider-value {
+  text-align: center; font-size: 32px; font-weight: 800;
+  color: var(--primary-light); margin-bottom: 8px;
+}
+input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 6px; border-radius: 3px;
+  background: rgba(255,255,255,0.1); outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--primary); cursor: pointer;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--primary); cursor: pointer; border: none;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+}
+.slider-labels {
+  display: flex; justify-content: space-between;
+  font-size: 12px; color: var(--text-dim); margin-top: 8px;
+}
+/* Text input */
+.text-input, textarea.text-input {
+  width: 100%; padding: 12px 16px;
+  background: rgba(0,0,0,0.2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-size: 15px; font-family: inherit; resize: vertical;
+  min-height: 44px;
+}
+.text-input:focus { outline: none; border-color: var(--primary); }
+textarea.text-input { min-height: 72px; }
+.text-input::placeholder { color: var(--text-dim); }
+/* Two-part question */
+.q-sub { margin-left: 0; margin-bottom: 20px; }
+.q-sub-label {
+  font-size: 14px; font-weight: 600; color: var(--text-muted);
+  margin-bottom: 8px;
+}
+/* Buttons */
+.btn {
+  display: block; width: 100%; padding: 16px;
+  border: none; border-radius: var(--radius);
+  font-size: 16px; font-weight: 700; cursor: pointer;
+  transition: all 0.2s; text-align: center;
+  font-family: inherit;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--primary));
+  color: #fff; box-shadow: 0 4px 16px rgba(168, 85, 247, 0.3);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-secondary {
+  background: var(--bg-card); color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-row { display: flex; gap: 12px; }
+.btn-row .btn { flex: 1; }
+.btn-back {
+  background: transparent; color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+/* Conditional note */
+.cond-note {
+  font-size: 13px; color: var(--text-dim); font-style: italic;
+  margin-top: 8px; padding: 10px 14px;
+  background: rgba(255,255,255,0.03); border-radius: 8px;
+  border-left: 3px solid var(--text-dim);
+}
+/* End page */
+.end-page { text-align: center; padding: 60px 20px; }
+.end-icon { font-size: 48px; margin-bottom: 20px; }
+.end-title { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+.end-desc { font-size: 15px; color: var(--text-muted); }
+/* Result page */
+.result-card {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(168, 85, 247, 0.06));
+  border: 1px solid var(--border-active);
+  border-radius: 24px; padding: 32px 24px;
+  box-shadow: 0 8px 40px rgba(139, 92, 246, 0.15);
+  margin-bottom: 24px;
+}
+.result-header {
+  text-align: center; margin-bottom: 28px;
+  padding-bottom: 20px; border-bottom: 1px solid var(--border);
+}
+.result-badge {
+  display: inline-block; padding: 4px 14px;
+  background: rgba(168, 85, 247, 0.2); border-radius: 20px;
+  font-size: 12px; color: var(--primary-light); font-weight: 600;
+  margin-bottom: 12px;
+}
+.result-type {
+  font-size: 24px; font-weight: 800;
+  background: linear-gradient(135deg, var(--primary-light), var(--accent));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.result-item {
+  display: flex; gap: 14px; margin-bottom: 20px;
+  align-items: flex-start;
+}
+.result-icon {
+  font-size: 24px; flex-shrink: 0; width: 32px; text-align: center;
+}
+.result-content { flex: 1; }
+.result-key {
+  font-size: 12px; color: var(--text-dim); margin-bottom: 4px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.result-val {
+  font-size: 16px; font-weight: 600; color: var(--text);
+}
+.result-val.quote {
+  font-style: italic; color: var(--primary-light);
+  padding: 8px 12px; background: rgba(0,0,0,0.15);
+  border-radius: 8px; border-left: 3px solid var(--accent);
+}
+.result-analysis {
+  font-size: 15px; line-height: 1.7; color: var(--text-muted);
+  padding: 16px 18px; background: rgba(0,0,0,0.15);
+  border-radius: var(--radius-sm); margin-top: 8px;
+  border-left: 3px solid var(--primary);
+}
+.result-score-chart {
+  margin: 16px 0; padding: 16px;
+  background: rgba(0,0,0,0.15); border-radius: var(--radius-sm);
+}
+.score-bar-row { margin-bottom: 10px; }
+.score-bar-label {
+  display: flex; justify-content: space-between;
+  font-size: 13px; margin-bottom: 4px;
+}
+.score-bar-track {
+  height: 8px; background: rgba(255,255,255,0.08);
+  border-radius: 4px; overflow: hidden;
+}
+.score-bar-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--primary-light));
+  transition: width 0.8s ease;
+}
+.result-actions {
+  display: flex; gap: 12px; margin-top: 24px;
+}
+.result-actions .btn { flex: 1; }
+/* Toast */
+#toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: rgba(168, 85, 247, 0.9); color: #fff;
+  padding: 12px 24px; border-radius: 24px; font-size: 14px;
+  z-index: 200; opacity: 0; pointer-events: none;
+  transition: opacity 0.3s; max-width: 90%;
+}
+#toast.show { opacity: 1; }
+/* Hidden */
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div id="progress-wrap"><div id="progress-bar"></div></div>
+<div class="container">
+
+<!-- ========== 导语页 ========== -->
+<section id="page-intro" class="page active">
+  <div class="intro-hero">
+    <span class="intro-icon">🟣</span>
+    <h1 class="intro-title">紫人（NT型人格）<br>原生家庭与成长轨迹调查</h1>
+    <p class="intro-desc">这是一份纯粹的数据观察问卷，不卖课、不诊断、不给人生建议。
+我们只想搞清楚一件事：你的理性，到底是家里养的，还是现实逼的。</p>
+    <div class="intro-meta">
+      <span>🔒 完全匿名</span>
+      <span>⏱️ 5~8分钟</span>
+      <span>✅ 无对错之分</span>
+    </div>
+    <button class="btn btn-primary" onclick="goTo('page-basic')">开始问卷</button>
+    <button class="btn btn-secondary" style="margin-top:12px" onclick="goToStats()">📊 查看所有人统计</button>
+  </div>
+</section>
+
+<!-- ========== 基础信息 ========== -->
+<section id="page-basic" class="page">
+  <h2 class="section-title">第一站：基础信息登记</h2>
+  <p class="section-sub">所有人必答</p>
+
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">Q1</span>你的MBTI四项字母是？</div>
+    <div class="option-list" id="q1-list">
+      <label class="option"><input type="radio" name="q1" value="INTJ"><span class="radio-dot"></span><span class="option-text">INTJ</span></label>
+      <label class="option"><input type="radio" name="q1" value="INTP"><span class="radio-dot"></span><span class="option-text">INTP</span></label>
+      <label class="option"><input type="radio" name="q1" value="ENTJ"><span class="radio-dot"></span><span class="option-text">ENTJ</span></label>
+      <label class="option"><input type="radio" name="q1" value="ENTP"><span class="radio-dot"></span><span class="option-text">ENTP</span></label>
+      <label class="option"><input type="radio" name="q1" value="其他" onchange="onQ1Change()"><span class="radio-dot"></span><span class="option-text">其他（感谢参与，问卷结束）</span></label>
+    </div>
+  </div>
+
+  <div id="basic-rest">
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">Q2</span>你的年龄区间？</div>
+    <div class="option-list">
+      <label class="option"><input type="radio" name="q2" value="18~24岁"><span class="radio-dot"></span><span class="option-text">18~24岁</span></label>
+      <label class="option"><input type="radio" name="q2" value="25~34岁"><span class="radio-dot"></span><span class="option-text">25~34岁</span></label>
+      <label class="option"><input type="radio" name="q2" value="35~44岁"><span class="radio-dot"></span><span class="option-text">35~44岁</span></label>
+      <label class="option"><input type="radio" name="q2" value="45岁及以上"><span class="radio-dot"></span><span class="option-text">45岁及以上</span></label>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">Q3</span>你的性别？</div>
+    <div class="option-list">
+      <label class="option"><input type="radio" name="q3" value="男"><span class="radio-dot"></span><span class="option-text">男</span></label>
+      <label class="option"><input type="radio" name="q3" value="女"><span class="radio-dot"></span><span class="option-text">女</span></label>
+      <label class="option"><input type="radio" name="q3" value="其他"><span class="radio-dot"></span><span class="option-text">其他</span></label>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">Q4</span>物质生活状态自评（1=时常为生存发愁，10=完全财务自由）</div>
+    <div class="slider-wrap">
+      <div class="slider-value" id="q4-val">5</div>
+      <input type="range" min="1" max="10" value="5" id="q4-slider" oninput="document.getElementById('q4-val').textContent=this.value">
+      <div class="slider-labels"><span>1 生存发愁</span><span>10 财务自由</span></div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">Q5</span>家庭构成</div>
+    <div class="q-sub">
+      <div class="q-sub-label">Q5-a 父母情况：</div>
+      <div class="option-list">
+        <label class="option"><input type="radio" name="q5a" value="父母双全且未离异"><span class="radio-dot"></span><span class="option-text">父母双全且未离异</span></label>
+        <label class="option"><input type="radio" name="q5a" value="父母离异，随母亲"><span class="radio-dot"></span><span class="option-text">父母离异，随母亲</span></label>
+        <label class="option"><input type="radio" name="q5a" value="父母离异，随父亲"><span class="radio-dot"></span><span class="option-text">父母离异，随父亲</span></label>
+        <label class="option"><input type="radio" name="q5a" value="父母离异，轮流抚养"><span class="radio-dot"></span><span class="option-text">父母离异，轮流抚养</span></label>
+        <label class="option"><input type="radio" name="q5a" value="单亲（一方去世）"><span class="radio-dot"></span><span class="option-text">单亲（一方去世）</span></label>
+        <label class="option"><input type="radio" name="q5a" value="其他"><span class="radio-dot"></span><span class="option-text">其他（抚养人为祖辈或亲戚）</span></label>
+      </div>
+    </div>
+    <div class="q-sub">
+      <div class="q-sub-label">Q5-b 兄弟姐妹情况：</div>
+      <div class="option-list">
+        <label class="option"><input type="radio" name="q5b" value="独生子女"><span class="radio-dot"></span><span class="option-text">独生子女</span></label>
+        <label class="option"><input type="radio" name="q5b" value="有1个姐姐"><span class="radio-dot"></span><span class="option-text">有1个姐姐</span></label>
+        <label class="option"><input type="radio" name="q5b" value="有1个哥哥"><span class="radio-dot"></span><span class="option-text">有1个哥哥</span></label>
+        <label class="option"><input type="radio" name="q5b" value="有1个弟弟"><span class="radio-dot"></span><span class="option-text">有1个弟弟</span></label>
+        <label class="option"><input type="radio" name="q5b" value="有1个妹妹"><span class="radio-dot"></span><span class="option-text">有1个妹妹</span></label>
+        <label class="option"><input type="radio" name="q5b" value="姐弟组合"><span class="radio-dot"></span><span class="option-text">有1个姐姐 + 1个弟弟（姐弟组合）</span></label>
+        <label class="option"><input type="radio" name="q5b" value="兄妹组合"><span class="radio-dot"></span><span class="option-text">有1个哥哥 + 1个妹妹（兄妹组合）</span></label>
+        <label class="option"><input type="radio" name="q5b" value="有2个姐姐"><span class="radio-dot"></span><span class="option-text">有2个姐姐</span></label>
+        <label class="option"><input type="radio" name="q5b" value="有2个哥哥"><span class="radio-dot"></span><span class="option-text">有2个哥哥</span></label>
+        <label class="option"><input type="radio" name="q5b" value="有3个及以上姐姐"><span class="radio-dot"></span><span class="option-text">有3个及以上的姐姐</span></label>
+        <label class="option"><input type="radio" name="q5b" value="有3个及以上哥哥"><span class="radio-dot"></span><span class="option-text">有3个及以上的哥哥</span></label>
+        <label class="option"><input type="radio" name="q5b" value="其他"><span class="radio-dot"></span><span class="option-text">其他复杂组合</span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-back" onclick="goTo('page-intro')">返回</button>
+    <button class="btn btn-primary" onclick="submitBasic()">下一步</button>
+  </div>
+  </div>
+</section>
+
+<!-- ========== 命运分叉点 ========== -->
+<section id="page-branch" class="page">
+  <h2 class="section-title">第二站：命运分叉点</h2>
+  <p class="section-sub">核心路由，决定后续路径</p>
+
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">Q6</span>你觉得自己的理性、抽离、重逻辑的"紫人底色"，更接近以下哪种情况？</div>
+    <div class="option-list">
+      <label class="option"><input type="radio" name="q6" value="A"><span class="radio-dot"></span><span class="option-text"><strong>A. 天生如此</strong>（12岁前就这德性）→ 路径甲</span></label>
+      <label class="option"><input type="radio" name="q6" value="B"><span class="radio-dot"></span><span class="option-text"><strong>B. 后天转变</strong>（12岁后因某些经历才慢慢变成这样）→ 路径乙</span></label>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-back" onclick="goTo('page-basic')">返回</button>
+    <button class="btn btn-primary" onclick="submitBranch()">确定路径</button>
+  </div>
+</section>
+
+<!-- ========== 路径甲 - 模块一 ========== -->
+<section id="page-pathA-m1" class="page">
+  <h2 class="section-title">路径甲：核心教养维度</h2>
+  <div class="module-intro">既然你觉得自己从小就是这副"理性早熟"的德性，那我们一起来刨一刨你家的"土壤"——纯粹好奇，什么样的环境能养出这种天生抽离的灵魂。<br><br>请根据真实感受打分：1=完全不符合，5=完全符合</div>
+
+  <div class="likert-divider">维度A：自主性支持</div>
+  <div id="likert-A"></div>
+
+  <div class="likert-divider">维度B：情感回应性</div>
+  <div id="likert-B"></div>
+
+  <div class="likert-divider">维度C：规则与逻辑性</div>
+  <div id="likert-C"></div>
+
+  <div class="likert-divider">维度D：压力与期望</div>
+  <div id="likert-D"></div>
+
+  <div class="likert-divider">维度E：父母思维镜像</div>
+  <div id="likert-E"></div>
+
+  <div class="btn-row" style="margin-top:24px">
+    <button class="btn btn-back" onclick="goTo('page-branch')">返回</button>
+    <button class="btn btn-primary" onclick="submitPathAM1()">下一步</button>
+  </div>
+</section>
+
+<!-- ========== 路径甲 - 模块二 ========== -->
+<section id="page-pathA-m2" class="page">
+  <h2 class="section-title">路径甲：情境行为</h2>
+  <div class="module-intro">量表太抽象，我们来点具体的。请回忆你12岁之前最常见的家庭场景。</div>
+
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">M1</span>当你灰头土脸地回家时，父母最常做出的反应是？（最多选3项）</div>
+    <div class="option-list" id="m1-list" data-max="3"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">M2</span>关于"花钱"和"兴趣班"，家里的主流态度是？</div>
+    <div class="option-list" id="m2-list"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">M3</span>你们家饭桌上最常见的聊天话题是？</div>
+    <div class="option-list" id="m3-list"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">M4</span>你的父母之间处理分歧的方式更像？</div>
+    <div class="option-list" id="m4-list"></div>
+  </div>
+
+  <div class="btn-row" style="margin-top:24px">
+    <button class="btn btn-back" onclick="goTo('page-pathA-m1')">返回</button>
+    <button class="btn btn-primary" onclick="submitPathAM2()">生成结果</button>
+  </div>
+</section>
+
+<!-- ========== 路径乙 - Q7 ========== -->
+<section id="page-pathB-1" class="page">
+  <h2 class="section-title">路径乙：人生变故深度调查</h2>
+  <div class="module-intro">既然你是后期转变的，那我们来记录一下，是什么把你"捶"成了紫人。</div>
+
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">Q7</span>在12~18岁的青春期，你是否经历过让你世界观或性格发生明显转向的重大事件？（可多选）</div>
+    <div class="option-list" id="q7-list"></div>
+    <div class="cond-note" id="q7-note" style="display:none">已选择"无特别拐点"，将直接归为"觉醒转型型"，后续题目将跳过。</div>
+  </div>
+
+  <div class="btn-row" style="margin-top:24px">
+    <button class="btn btn-back" onclick="goTo('page-branch')">返回</button>
+    <button class="btn btn-primary" onclick="submitPathB1()">下一步</button>
+  </div>
+</section>
+
+<!-- ========== 路径乙 - Q8~Q10 ========== -->
+<section id="page-pathB-2" class="page">
+  <h2 class="section-title">路径乙：深层回溯</h2>
+
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">Q8</span>你是否认同："我发现自己的理性/冷漠，很大程度上是为了保护自己不再受伤。"</div>
+    <div class="slider-wrap">
+      <div class="slider-value" id="q8-val">3</div>
+      <input type="range" min="1" max="5" value="3" id="q8-slider" oninput="document.getElementById('q8-val').textContent=this.value">
+      <div class="slider-labels"><span>1 完全不认同</span><span>5 完全认同</span></div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">Q9</span>在18岁之前，你是否有过持续超过3个月、或冲击极大的心理创伤经历？</div>
+    <div class="option-list">
+      <label class="option"><input type="radio" name="q9" value="有，至今仍有影响" onchange="toggleQ10()"><span class="radio-dot"></span><span class="option-text">有，至今仍有影响</span></label>
+      <label class="option"><input type="radio" name="q9" value="有，但已基本消化" onchange="toggleQ10()"><span class="radio-dot"></span><span class="option-text">有，但已基本消化</span></label>
+      <label class="option"><input type="radio" name="q9" value="没有明显创伤经历" onchange="toggleQ10()"><span class="radio-dot"></span><span class="option-text">没有明显创伤经历</span></label>
+      <label class="option"><input type="radio" name="q9" value="不确定/不愿透露" onchange="toggleQ10()"><span class="radio-dot"></span><span class="option-text">不确定 / 不愿透露</span></label>
+    </div>
+  </div>
+
+  <div class="q-block hidden" id="q10-block">
+    <div class="q-label"><span class="q-num">Q10</span>那段创伤最接近以下哪种性质？（可多选）</div>
+    <div class="option-list" id="q10-list"></div>
+  </div>
+
+  <div class="btn-row" style="margin-top:24px">
+    <button class="btn btn-back" onclick="goTo('page-pathB-1')">返回</button>
+    <button class="btn btn-primary" onclick="submitPathB2()">生成结果</button>
+  </div>
+</section>
+
+<!-- ========== 问卷结束页（Q1选其他） ========== -->
+<section id="page-end" class="page">
+  <div class="end-page">
+    <div class="end-icon">🙏</div>
+    <h2 class="end-title">感谢你的参与</h2>
+    <p class="end-desc">本问卷面向NT型（INTJ/INTP/ENTJ/ENTP）人群。<br>感谢你的时间，祝一切顺利。</p>
+  </div>
+</section>
+
+<!-- ========== 结果页 ========== -->
+<section id="page-result" class="page">
+  <div id="result-content"></div>
+  <div class="result-actions">
+    <button class="btn btn-secondary" onclick="copyResult()">复制结果</button>
+    <button class="btn btn-primary" onclick="restart()">重新测试</button>
+  </div>
+  <button class="btn btn-secondary" style="margin-top:12px" onclick="goTo('page-feedback')">💬 写下你的建议或思考</button>
+</section>
+
+<!-- ========== 反馈页（结果页之后，可选） ========== -->
+<section id="page-feedback" class="page">
+  <h2 class="section-title">最后一问</h2>
+  <p class="section-sub">你的声音很重要</p>
+  <div class="module-intro">问卷快结束了。作为紫人，你对这份问卷有什么建议或思考？<br>任何角度都欢迎——题目设计、逻辑漏洞、你想看到的数据维度、或者做完了的感受。</div>
+
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">F1</span>你对这份问卷的建议或思考（选填）</div>
+    <textarea class="text-input" id="feedback-input" placeholder="想到什么写什么，不用组织语言" style="min-height:120px"></textarea>
+  </div>
+
+  <div class="btn-row" style="margin-top:24px">
+    <button class="btn btn-primary" onclick="submitFeedback()">提交并查看统计</button>
+    <button class="btn btn-back" onclick="goTo('page-result')">跳过</button>
+  </div>
+</section>
+
+</div>
+<div id="toast"></div>
+
+<script>
+// ==================== Supabase 后端配置 ====================
+// 注册地址：https://supabase.com （免费，国内可访问）
+// 步骤：注册 → 新建项目 → SQL Editor 运行建表语句 → Settings → API → 复制 URL 和 anon key
+const SUPABASE_URL = 'https://sfocotdzsoboxcfhhjcj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmb2NvdGR6c29ib3hjZmhoamNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxNjE4NDksImV4cCI6MjEwMzczNzg0OX0.Eu74hQ2FZZgZMF4LKilS1FKQCm-HuPh6BanhDhu1C1U';
+
+function initSupabase() {
+  if (SUPABASE_URL === 'YOUR_SUPABASE_URL_HERE') {
+    console.log('Supabase 未配置，数据不会上传');
+    return false;
+  }
+  return true;
+}
+
+async function submitResultToBackend() {
+  const r = state.result;
+  const a = state.answers;
+  const row = {
+    mbti: a.q1 || '',
+    age_group: a.q2 || '',
+    gender: a.q3 || '',
+    tier_score: a.q4 || 0,
+    tier: getTier(a.q4 || 5),
+    parents: a.q5a || '',
+    siblings: a.q5b || '',
+    path: r.path || '',
+    evolution_type: r.type || '',
+    family_module: r.module || '',
+    scores: r.scores || {},
+    trauma: r.trauma || '',
+    m1: a.m1 || [],
+    m2: a.m2 || [],
+    m3: a.m3 || [],
+    m4: a.m4 || [],
+    q7: a.q7 || [],
+    q8: a.q8 || 0,
+    q9: a.q9 || '',
+    q10: a.q10 || [],
+  };
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/survey_results`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(row)
+    });
+    if (resp.ok) console.log('结果已匿名上传');
+    else console.log('上传失败（不影响查看结果）:', resp.status);
+  } catch(e) {
+    console.log('上传失败（不影响查看结果）:', e.message);
+  }
+}
+
+function goToStats() {
+  window.location.href = 'stats.html';
+}
+
+async function submitFeedback() {
+  const text = document.getElementById('feedback-input').value.trim();
+  if (text) {
+    try {
+      const resp = await fetch(`${SUPABASE_URL}/rest/v1/survey_feedback`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ feedback: text })
+      });
+      if (resp.ok) showToast('感谢你的反馈！');
+    } catch(e) { /* 忽略 */ }
+  }
+  goToStats();
+}
+
+// ==================== 数据定义 ====================
+const likertData = {
+  A: [
+    {code:'A1', text:'家里做重大决定（如搬家、择校）时，父母会认真征求我的意见。'},
+    {code:'A2', text:'当我提出与父母相反的观点时，他们通常会和我讨论，而非直接否定。'},
+    {code:'A3', text:'父母很少强行规划我的课余时间，允许我自己安排节奏。'},
+    {code:'A4', text:'他们曾明确鼓励我"自己的事自己拿主意，后果自己承担"。'},
+    {code:'A5', text:'家里的规矩会随我年龄增长而调整，不死板。'},
+    {code:'A6', text:'父母非常信任我管理自己的零花钱和私人时间，几乎不设防。'},
+  ],
+  B: [
+    {code:'B1', text:'当我难过或委屈时，父母能很快察觉到我的情绪变化。'},
+    {code:'B2', text:'家庭中有固定的、轻松的谈心或聊天时刻。'},
+    {code:'B3', text:'父母会用语言或肢体（拥抱、拍肩）直接向我表达爱意。'},
+    {code:'B4', text:'即使我表达内心想法，父母也常理解不了我的感受。（反向题）'},
+    {code:'B5', text:'家庭冲突之后，我们会主动修复关系，不会长期冷战。'},
+    {code:'B6', text:'当我表现出愤怒或沮丧时，父母的第一反应是接纳和安抚，而非制止或呵斥。'},
+  ],
+  C: [
+    {code:'C1', text:'我家的家规是明确说过、不用靠猜的。'},
+    {code:'C2', text:'奖惩有清晰理由，不全凭父母心情。'},
+    {code:'C3', text:'父母更在意"这件事合不合理"，而不是"你听不听话"。'},
+    {code:'C4', text:'家里的规则对全家成员（包括父母自己）一视同仁，没有双重标准。'},
+  ],
+  D: [
+    {code:'D1', text:'父母对我学业或未来职业有极高的期望。'},
+    {code:'D2', text:'我常被拿来和"别人家的孩子"做比较。'},
+    {code:'D3', text:'如果我失败了，更多是被批评，而非引导反思。（反向题）'},
+    {code:'D4', text:'父母传达期望的方式是"你可以走自己的路"，而不是"你必须走这条路"。'},
+  ],
+  E: [
+    {code:'E1', text:'父母中至少有一方的思维模式非常理性、冷静，像"工程师"或"军师"一样分析问题。'},
+    {code:'E2', text:'父母对我精神世界（兴趣、怪念头、哲学发问）的关注，不亚于对我成绩的关注。'},
+  ],
+};
+
+const multiChoiceData = {
+  m1: [
+    '坐下来帮你拆解前因后果，分析"哪里错了、下次怎么改"',
+    '先抱住你或摸摸头，说"没事，人没事就好"',
+    '直接带你去找对方理论，或者质问老师',
+    '让你自己回房间反思，等你想通了再说',
+    '忙于手头的事，简单应付几句就过去了',
+  ],
+  m2: [
+    '兴趣可以搞，但必须保证"对升学/有用"',
+    '支持一切无用的爱好，觉得"人要有痴迷的东西"',
+    '必须成绩排前几，才配谈兴趣',
+    '很少过问我怎么花钱，给我就自己支配',
+    '每笔开销都要报账，管得很紧',
+  ],
+  m3: [
+    '我的考试成绩和学校排名',
+    '社会热点、新闻时政，或者父母工作上的事',
+    '邻里八卦、亲戚间的家长里短',
+    '各自沉默，各吃各的，很少聊天',
+    '一起讨论某个抽象问题（比如"人为什么要上学""公平是什么"）',
+  ],
+  m4: [
+    '理性辩论，摆事实讲道理，不伤和气',
+    '情绪化争吵，声音很大，有时会摔东西',
+    '长期冷战，互不搭理，靠你传话',
+    '避开你私下解决，你几乎感觉不到他们吵架',
+    '一方绝对强势，另一方妥协退让',
+  ],
+  q7: [
+    {val:'无', text:'无，其实没有什么特别拐点', exclusive:true},
+    {val:'家庭结构突变', text:'家庭结构突变（父母离异、亲人重病或离世）'},
+    {val:'校园霸凌', text:'遭遇严重校园霸凌或社交孤立'},
+    {val:'深度背叛', text:'被挚友或初恋深度背叛'},
+    {val:'经济下滑', text:'家庭经济剧烈下滑，影响生存'},
+    {val:'价值观击碎', text:'原本信奉的价值观（信仰、道德观）被现实击碎'},
+  ],
+  q10: [
+    {val:'① 权威压制型', text:'① 权威压制型：长期被父母/师长打压贬低，想法永远被否定'},
+    {val:'② 情感剥夺型', text:'② 情感剥夺型：家庭冰冷，父母长期漠视你的内心感受'},
+    {val:'③ 依附断裂型', text:'③ 依附断裂型：重要亲人离世或被抛弃、长期分离'},
+    {val:'④ 人际背叛型', text:'④ 人际背叛型：霸凌、孤立或被信任的人恶意背叛'},
+    {val:'⑤ 生存危机型', text:'⑤ 生存危机型：家庭经济崩盘或自身严重伤病意外'},
+    {val:'⑥ 信仰坍塌型', text:'⑥ 信仰坍塌型：深信不疑的价值观被现实粉碎'},
+  ],
+};
+
+// ==================== 状态 ====================
+const state = {
+  path: null,
+  answers: {},
+};
+
+// ==================== 初始化 ====================
+function init() {
+  initSupabase();
+  renderLikert();
+  renderMultiChoice();
+  renderQ7();
+  renderQ10();
+  updateProgress();
+}
+
+function renderLikert() {
+  Object.keys(likertData).forEach(dim => {
+    const container = document.getElementById('likert-' + dim);
+    if (!container) return;
+    let html = '';
+    likertData[dim].forEach(q => {
+      html += `
+        <div class="likert-group">
+          <div class="likert-q"><span class="likert-code">${q.code}</span>${q.text}</div>
+          <div class="likert-scale">
+            ${[1,2,3,4,5].map(n => `<button class="likert-btn" data-dim="${dim}" data-code="${q.code}" data-val="${n}" onclick="selectLikert(this)">${n}</button>`).join('')}
+          </div>
+        </div>`;
+    });
+    container.innerHTML = html;
+  });
+}
+
+function selectLikert(btn) {
+  const group = btn.parentElement;
+  group.querySelectorAll('.likert-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function renderMultiChoice() {
+  ['m1','m2','m3','m4'].forEach(key => {
+    const container = document.getElementById(key + '-list');
+    if (!container) return;
+    let html = '';
+    multiChoiceData[key].forEach((opt, i) => {
+      const val = typeof opt === 'string' ? opt : opt.val;
+      const text = typeof opt === 'string' ? opt : opt.text;
+      html += `
+        <label class="option">
+          <input type="checkbox" name="${key}" value="${val}" data-text="${text}" onchange="onMultiChange(this,'${key}')">
+          <span class="check-box"></span>
+          <span class="option-text">${text}</span>
+        </label>`;
+    });
+    // 添加"其他"选项
+    html += `
+      <label class="option">
+        <input type="checkbox" name="${key}" value="其他" onchange="onMultiChange(this,'${key}')">
+        <span class="check-box"></span>
+        <span class="option-text">其他</span>
+      </label>
+      <input type="text" class="other-input" id="${key}-other" placeholder="请简填">`;
+    container.innerHTML = html;
+  });
+}
+
+function onMultiChange(checkbox, key) {
+  // M1 限制最多3项
+  if (key === 'm1') {
+    const checked = document.querySelectorAll(`input[name="m1"]:checked`);
+    if (checked.length > 3) {
+      checkbox.checked = false;
+      showToast('M1最多选3项');
+      return;
+    }
+  }
+  // 显示/隐藏"其他"输入框
+  if (checkbox.value === '其他') {
+    const otherInput = document.getElementById(key + '-other');
+    if (otherInput) {
+      otherInput.classList.toggle('show', checkbox.checked);
+    }
+  }
+}
+
+function renderQ7() {
+  const container = document.getElementById('q7-list');
+  let html = '';
+  multiChoiceData.q7.forEach(opt => {
+    html += `
+      <label class="option">
+        <input type="checkbox" name="q7" value="${opt.val}" data-text="${opt.text}" ${opt.exclusive ? 'data-exclusive="true"' : ''} onchange="onQ7Change(this)">
+        <span class="check-box"></span>
+        <span class="option-text">${opt.text}</span>
+      </label>`;
+  });
+  html += `
+    <label class="option">
+      <input type="checkbox" name="q7" value="其他" onchange="onQ7Change(this)">
+      <span class="check-box"></span>
+      <span class="option-text">其他</span>
+    </label>
+    <input type="text" class="other-input" id="q7-other" placeholder="请简填">`;
+  container.innerHTML = html;
+}
+
+function onQ7Change(checkbox) {
+  const note = document.getElementById('q7-note');
+  if (checkbox.dataset.exclusive === 'true' && checkbox.checked) {
+    // 取消其他选项
+    document.querySelectorAll('input[name="q7"]').forEach(cb => {
+      if (cb !== checkbox) {
+        cb.checked = false;
+        if (cb.value === '其他') {
+          document.getElementById('q7-other').classList.remove('show');
+        }
+      }
+    });
+    note.style.display = 'block';
+  } else {
+    // 取消"无"
+    const exclusiveCb = document.querySelector('input[name="q7"][data-exclusive="true"]');
+    if (exclusiveCb) exclusiveCb.checked = false;
+    note.style.display = 'none';
+  }
+  // 其他输入框
+  if (checkbox.value === '其他') {
+    document.getElementById('q7-other').classList.toggle('show', checkbox.checked);
+  }
+}
+
+function renderQ10() {
+  const container = document.getElementById('q10-list');
+  let html = '';
+  multiChoiceData.q10.forEach(opt => {
+    html += `
+      <label class="option">
+        <input type="checkbox" name="q10" value="${opt.val}" data-text="${opt.text}">
+        <span class="check-box"></span>
+        <span class="option-text">${opt.text}</span>
+      </label>`;
+  });
+  html += `
+    <label class="option">
+      <input type="checkbox" name="q10" value="不愿细分">
+      <span class="check-box"></span>
+      <span class="option-text">不愿细分 / 以上皆不适用</span>
+    </label>`;
+  container.innerHTML = html;
+}
+
+function toggleQ10() {
+  const q9Val = getRadio('q9');
+  const q10Block = document.getElementById('q10-block');
+  if (q9Val && q9Val.startsWith('有')) {
+    q10Block.classList.remove('hidden');
+  } else {
+    q10Block.classList.add('hidden');
+  }
+}
+
+function onQ1Change() {
+  const val = getRadio('q1');
+  const rest = document.getElementById('basic-rest');
+  if (val === '其他') {
+    rest.style.opacity = '0.4';
+    rest.style.pointerEvents = 'none';
+  } else {
+    rest.style.opacity = '1';
+    rest.style.pointerEvents = 'auto';
+  }
+}
+
+// ==================== 导航 ====================
+function goTo(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+  updateProgress(pageId);
+}
+
+function updateProgress(pageId) {
+  const map = {
+    'page-intro': 0,
+    'page-basic': 10,
+    'page-branch': 25,
+    'page-pathA-m1': 40,
+    'page-pathA-m2': 75,
+    'page-pathB-1': 40,
+    'page-pathB-2': 60,
+    'page-result': 100,
+    'page-end': 100,
+  };
+  const current = pageId || document.querySelector('.page.active')?.id;
+  const pct = map[current] || 0;
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+// ==================== 收集辅助 ====================
+function getRadio(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : null;
+}
+function getCheckboxes(name) {
+  return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(el => ({
+    value: el.value,
+    text: el.dataset.text || el.value,
+  }));
+}
+function getCheckboxTexts(name) {
+  return getCheckboxes(name).map(c => c.text);
+}
+
+// ==================== 提交逻辑 ====================
+function submitBasic() {
+  const q1 = getRadio('q1');
+  if (!q1) { showToast('请选择你的MBTI类型'); return; }
+  if (q1 === '其他') { goTo('page-end'); return; }
+
+  if (!getRadio('q2')) { showToast('请选择年龄区间'); return; }
+  if (!getRadio('q3')) { showToast('请选择性别'); return; }
+  if (!getRadio('q5a')) { showToast('请选择父母情况'); return; }
+  if (!getRadio('q5b')) { showToast('请选择兄弟姐妹情况'); return; }
+
+  state.answers.q1 = q1;
+  state.answers.q2 = getRadio('q2');
+  state.answers.q3 = getRadio('q3');
+  state.answers.q4 = parseInt(document.getElementById('q4-slider').value);
+  state.answers.q5a = getRadio('q5a');
+  state.answers.q5b = getRadio('q5b');
+
+  goTo('page-branch');
+}
+
+function submitBranch() {
+  const q6 = getRadio('q6');
+  if (!q6) { showToast('请选择你的路径'); return; }
+  state.path = q6;
+  state.answers.q6 = q6;
+  if (q6 === 'A') {
+    goTo('page-pathA-m1');
+  } else {
+    goTo('page-pathB-1');
+  }
+}
+
+function submitPathAM1() {
+  // 验证所有Likert题都已回答
+  const dims = ['A','B','C','D','E'];
+  for (const dim of dims) {
+    for (const q of likertData[dim]) {
+      const btn = document.querySelector(`.likert-btn[data-dim="${dim}"][data-code="${q.code}"].active`);
+      if (!btn) { showToast(`请完成 ${q.code} 的打分`); return; }
+    }
+  }
+  // 收集答案
+  state.answers.likert = {};
+  dims.forEach(dim => {
+    state.answers.likert[dim] = {};
+    likertData[dim].forEach(q => {
+      const btn = document.querySelector(`.likert-btn[data-dim="${dim}"][data-code="${q.code}"].active`);
+      state.answers.likert[dim][q.code] = parseInt(btn.dataset.val);
+    });
+  });
+  goTo('page-pathA-m2');
+}
+
+function submitPathAM2() {
+  ['m1','m2','m3','m4'].forEach(key => {
+    const checks = getCheckboxes(key);
+    state.answers[key] = checks.map(c => c.text);
+    // 收集"其他"文本
+    const otherInput = document.getElementById(key + '-other');
+    if (otherInput && otherInput.classList.contains('show') && otherInput.value.trim()) {
+      state.answers[key + '_other'] = otherInput.value.trim();
+    }
+  });
+  if (state.answers.m1.length === 0) { showToast('请至少选择一项 M1'); return; }
+  calculatePathA();
+  submitResultToBackend();
+  goTo('page-result');
+  renderResult();
+}
+
+function submitPathB1() {
+  const q7Checks = getCheckboxes('q7');
+  if (q7Checks.length === 0) { showToast('请至少选择一项'); return; }
+  const otherInput = document.getElementById('q7-other');
+  state.answers.q7 = q7Checks.map(c => c.text);
+  if (otherInput && otherInput.classList.contains('show') && otherInput.value.trim()) {
+    state.answers.q7_other = otherInput.value.trim();
+  }
+  // 检查是否选了"无"
+  const hasWu = q7Checks.some(c => c.value === '无');
+  if (hasWu) {
+    // 直接觉醒转型型
+    state.answers.q8 = null;
+    state.answers.q9 = null;
+    state.answers.q10 = null;
+    calculatePathB();
+    submitResultToBackend();
+    goTo('page-result');
+    renderResult();
+  } else {
+    goTo('page-pathB-2');
+  }
+}
+
+function submitPathB2() {
+  state.answers.q8 = parseInt(document.getElementById('q8-slider').value);
+  state.answers.q9 = getRadio('q9');
+  if (!state.answers.q9) { showToast('请选择 Q9'); return; }
+  // Q10
+  const q10Block = document.getElementById('q10-block');
+  if (!q10Block.classList.contains('hidden')) {
+    state.answers.q10 = getCheckboxes('q10').map(c => c.text);
+  } else {
+    state.answers.q10 = null;
+  }
+  calculatePathB();
+  submitResultToBackend();
+  goTo('page-result');
+  renderResult();
+}
+
+// ==================== 计分逻辑 ====================
+function calculatePathA() {
+  const L = state.answers.likert;
+  // 反向题处理
+  const B4Score = 6 - L.B.B4;
+  const D3Score = 6 - L.D.D3;
+
+  const A_sum = L.A.A1 + L.A.A2 + L.A.A3 + L.A.A4 + L.A.A5 + L.A.A6;
+  const B_sum = L.B.B1 + L.B.B2 + L.B.B3 + B4Score + L.B.B5 + L.B.B6;
+  const C_sum = L.C.C1 + L.C.C2 + L.C.C3 + L.C.C4;
+  const D_sum = L.D.D1 + L.D.D2 + D3Score + L.D.D4;
+
+  // 标准化为百分制
+  const A_pct = (A_sum - 6) / 24 * 100;
+  const B_pct = (B_sum - 6) / 24 * 100;
+  const C_pct = (C_sum - 4) / 16 * 100;
+  const D_pct = (D_sum - 4) / 16 * 100;
+
+  // 判定模组
+  let module = '过渡/混合型';
+  if (A_pct > 70 && B_pct > 60 && C_pct > 70 && D_pct >= 40 && D_pct <= 70) {
+    module = '理性温室';
+  } else if (A_pct < 40 && B_pct < 40 && C_pct > 70 && D_pct > 70) {
+    module = '权威高塔';
+  } else if (A_pct > 70 && B_pct < 40 && C_pct < 40 && D_pct < 40) {
+    module = '自由孤岛';
+  } else if (B_pct > 70 && C_pct < 40 && A_pct >= 40 && A_pct <= 70 && D_pct >= 40 && D_pct <= 70) {
+    module = '混沌暖巢';
+  }
+
+  // 当前生态位
+  const ageGroup = state.answers.q2;
+  const tier = getTier(state.answers.q4);
+  const niche = `${ageGroup} × ${tier}`;
+
+  // 分析文本
+  const analysisMap = {
+    '理性温室': '你的紫人底色，与家庭的"高自主性"高度相关。在紫人数据中，你的家庭画像属于最典型的孵化器——规则清晰、自主空间大、情感回应尚可，理性是被"允许"和"鼓励"生长出来的。',
+    '权威高塔': '你的理性，可能是在高压规则下"长出来的铠甲"——规则清晰但自主空间极有限，期望极高且情感回应缺失。理性成为了你在权威结构中生存的工具，而非自由选择的表达。',
+    '自由孤岛': '你的抽离感，或许源于"自由但孤独"的成长环境——自主性极高，但情感回应严重缺位，规则模糊。你习惯了自己跟自己对话，理性是你唯一的陪伴语言。',
+    '混沌暖巢': '你的理性，可能是在"温暖但混乱"的家庭中发展出的自我保护机制——情感充沛但规则缺失、期望模糊。你用逻辑为自己建立了内在秩序，以对抗外在的不可预测。',
+    '过渡/混合型': '你的家庭画像呈现多元特征，既有某些维度的支持，也有另一些维度的缺失。紫人的底色，可能是多种家庭力量博弈后的平衡态——既有被允许的部分，也有被逼出来的部分。',
+  };
+
+  state.result = {
+    type: '原生型紫人',
+    module: module,
+    niche: niche,
+    analysis: analysisMap[module],
+    scores: { A: A_pct, B: B_pct, C: C_pct, D: D_pct },
+    path: 'A',
+  };
+}
+
+function calculatePathB() {
+  const q7 = state.answers.q7 || [];
+  const q8 = state.answers.q8;
+  const q9 = state.answers.q9;
+  const q10 = state.answers.q10 || [];
+
+  const hasWu = q7.some(c => c && c.includes('无'));
+  const hasItems = q7.length > 0 && !hasWu;
+
+  let type;
+  if (hasWu) {
+    type = '觉醒转型型';
+  } else if (hasItems || (q8 !== null && q8 >= 4) || (q9 && q9.includes('至今仍有影响'))) {
+    type = '创伤应激型';
+  } else {
+    type = '觉醒转型型';
+  }
+
+  const ageGroup = state.answers.q2;
+  const tier = getTier(state.answers.q4);
+  const niche = `${ageGroup} × ${tier}`;
+
+  let traumaLabel = '无显著创伤归类';
+  if (q10 && q10.length > 0) {
+    // 提取类型简称
+    traumaLabel = q10.map(t => {
+      const match = t.match(/^[①②③④⑤⑥]/);
+      return match ? match[0] + t.split(' ')[0].slice(1) : t;
+    }).join(' + ');
+  }
+
+  const analysisMap = {
+    '觉醒转型型': '你的紫人底色并非源于创伤，而是某种自然觉醒——也许是认知的成熟，也许是对世界运行方式的顿悟。你的理性是生长出来的，而非被逼出来的。这类紫人通常对自身的转变有清晰的自我觉察。',
+    '创伤应激型': '你的紫人底色，与成长中的创伤经历显著重合。在紫人数据中，这类印记常伴随高防御性理性——理性是你的盾牌，抽离是你的安全距离。这并非缺陷，而是一种生存策略的固化。',
+  };
+
+  state.result = {
+    type: type + '紫人',
+    trauma: traumaLabel,
+    niche: niche,
+    analysis: analysisMap[type],
+    path: 'B',
+    rawType: type,
+  };
+}
+
+function getTier(score) {
+  if (score <= 3) return '生存线';
+  if (score <= 7) return '中产线';
+  return '优渥线';
+}
+
+// ==================== 结果渲染 ====================
+function renderResult() {
+  const r = state.result;
+  const container = document.getElementById('result-content');
+  let html = '';
+
+  html += '<div class="result-card">';
+  html += '<div class="result-header">';
+  html += '<div class="result-badge">紫人画像报告</div>';
+  html += `<div class="result-type">${r.type}</div>`;
+  html += '</div>';
+
+  if (r.path === 'A') {
+    // 分数图表
+    html += '<div class="result-score-chart">';
+    ['A:自主性支持','B:情感回应性','C:规则与逻辑性','D:压力与期望'].forEach(label => {
+      const dim = label.split(':')[0];
+      const pct = r.scores[dim];
+      const name = label.split(':')[1];
+      html += `
+        <div class="score-bar-row">
+          <div class="score-bar-label"><span>${name}</span><span>${Math.round(pct)}%</span></div>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:${pct}%"></div></div>
+        </div>`;
+    });
+    html += '</div>';
+
+    html += resultItem('🏠', '原生家庭模组', r.module);
+    html += resultItem('📍', '当前生态位', r.niche);
+  } else {
+    if (r.trauma && r.trauma !== '无显著创伤归类') {
+      html += resultItem('🩸', '创伤印记', r.trauma);
+    }
+    html += resultItem('📍', '当前生态位', r.niche);
+  }
+
+  html += `<div class="result-analysis">${r.analysis}</div>`;
+  html += '</div>';
+
+  container.innerHTML = html;
+}
+
+function resultItem(icon, key, val, isQuote) {
+  return `
+    <div class="result-item">
+      <div class="result-icon">${icon}</div>
+      <div class="result-content">
+        <div class="result-key">${key}</div>
+        <div class="result-val ${isQuote ? 'quote' : ''}">${val || '—'}</div>
+      </div>
+    </div>`;
+}
+
+// ==================== 辅助功能 ====================
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2200);
+}
+
+function copyResult() {
+  const r = state.result;
+  let text = `🟣 紫人画像报告\n`;
+  text += `演化底色：${r.type}\n`;
+  if (r.path === 'A') {
+    text += `原生家庭模组：${r.module}\n`;
+    text += `当前生态位：${r.niche}\n`;
+  } else {
+    if (r.trauma && r.trauma !== '无显著创伤归类') {
+      text += `创伤印记：${r.trauma}\n`;
+    }
+    text += `当前生态位：${r.niche}\n`;
+  }
+  text += `\n${r.analysis}`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('结果已复制到剪贴板');
+  }).catch(() => {
+    showToast('复制失败，请手动截图');
+  });
+}
+
+function restart() {
+  state.path = null;
+  state.answers = {};
+  state.result = null;
+  // 重置所有表单
+  document.querySelectorAll('input[type="radio"]').forEach(el => el.checked = false);
+  document.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+  document.querySelectorAll('.likert-btn').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.text-input').forEach(el => el.value = '');
+  document.querySelectorAll('.other-input').forEach(el => { el.value=''; el.classList.remove('show'); });
+  document.getElementById('q4-slider').value = 5;
+  document.getElementById('q4-val').textContent = '5';
+  document.getElementById('q8-slider').value = 3;
+  document.getElementById('q8-val').textContent = '3';
+  document.getElementById('q10-block').classList.add('hidden');
+  document.getElementById('q7-note').style.display = 'none';
+  document.getElementById('basic-rest').style.opacity = '1';
+  document.getElementById('basic-rest').style.pointerEvents = 'auto';
+  goTo('page-intro');
+}
+
+// ==================== 启动 ====================
+init();
+</script>
+</body>
+</html>

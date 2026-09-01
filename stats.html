@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>紫人调查 · 全员统计</title>
+<style>
+:root {
+  --bg: #0d0b1a;
+  --bg-card: rgba(139, 92, 246, 0.08);
+  --primary: #a855f7;
+  --primary-light: #c084fc;
+  --accent: #8b5cf6;
+  --text: #e9e7f0;
+  --text-muted: #9ca3af;
+  --text-dim: #6b7280;
+  --border: rgba(168, 85, 247, 0.2);
+  --radius: 16px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: linear-gradient(180deg, #0d0b1a 0%, #1a0f2e 50%, #0d0b1a 100%);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  line-height: 1.6; min-height: 100vh;
+}
+.container { max-width: 680px; margin: 0 auto; padding: 40px 20px 60px; }
+.header { text-align: center; margin-bottom: 32px; }
+.header h1 {
+  font-size: 26px; font-weight: 800; margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--primary-light), var(--accent));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.header p { font-size: 14px; color: var(--text-muted); }
+.back-btn {
+  display: inline-block; margin-bottom: 20px; padding: 8px 16px;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--primary-light); text-decoration: none; font-size: 14px;
+}
+.stat-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; text-align: center;
+}
+.stat-num {
+  font-size: 32px; font-weight: 800;
+  background: linear-gradient(135deg, var(--primary-light), var(--accent));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.stat-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+.chart-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+}
+.chart-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--primary-light); }
+.chart-wrap { position: relative; }
+
+/* CSS Bar Chart */
+.bar-row { display: flex; align-items: center; margin-bottom: 10px; gap: 8px; }
+.bar-label {
+  flex: 0 0 auto; max-width: 55%; font-size: 13px; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.bar-track {
+  flex: 1; height: 24px; background: rgba(168,85,247,0.08);
+  border-radius: 6px; overflow: hidden; position: relative;
+}
+.bar-fill {
+  height: 100%; border-radius: 6px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  transition: width 0.6s ease;
+}
+.bar-fill.warm {
+  background: linear-gradient(90deg, #f59e0b, #ef4444);
+}
+.bar-value {
+  flex: 0 0 auto; font-size: 13px; color: var(--text-muted); min-width: 28px; text-align: right;
+}
+
+/* CSS Donut Chart */
+.donut-wrap { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.donut {
+  width: 120px; height: 120px; border-radius: 50%;
+  position: relative; flex-shrink: 0;
+}
+.donut-center {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 60px; height: 60px; border-radius: 50%; background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: var(--primary-light);
+}
+.donut-legend { flex: 1; min-width: 120px; }
+.legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px; }
+.legend-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+/* Dimension Score Bars */
+.dim-row { margin-bottom: 14px; }
+.dim-label { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.dim-bar-track {
+  height: 28px; background: rgba(168,85,247,0.08); border-radius: 8px; overflow: hidden;
+}
+.dim-bar-fill {
+  height: 100%; border-radius: 8px; display: flex; align-items: center; justify-content: flex-end;
+  padding-right: 10px; font-size: 13px; font-weight: 700; color: #fff;
+  transition: width 0.6s ease;
+}
+
+.quote-list { display: flex; flex-direction: column; gap: 8px; }
+.quote-item {
+  background: rgba(168,85,247,0.06); border-left: 3px solid var(--primary);
+  padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 14px; color: var(--text);
+}
+.quote-item .count { float: right; color: var(--text-dim); font-size: 12px; }
+
+.loading { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+.loading .spinner {
+  width: 40px; height: 40px; border: 3px solid var(--border);
+  border-top-color: var(--primary); border-radius: 50%;
+  animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-box, .empty-box {
+  text-align: center; padding: 60px 20px; color: var(--text-muted);
+}
+.error-box .retry-btn, .empty-box .retry-btn {
+  display: inline-block; margin-top: 16px; padding: 10px 24px;
+  background: var(--primary); color: #fff; border-radius: 8px;
+  text-decoration: none; font-size: 14px; border: none; cursor: pointer;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <a href="survey.html" class="back-btn">← 返回问卷</a>
+  <div class="header">
+    <h1>紫人调查 · 全员统计</h1>
+    <p>所有数据匿名汇总，实时更新</p>
+  </div>
+
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+    <p>正在加载统计数据...</p>
+  </div>
+
+  <div id="error" class="error-box" style="display:none">
+    <p id="error-msg">加载失败</p>
+    <button class="retry-btn" onclick="location.reload()">重新加载</button>
+  </div>
+
+  <div id="empty" class="empty-box" style="display:none">
+    <p>暂无数据。先去填写问卷吧！</p>
+    <a href="survey.html" class="retry-btn">去填写问卷</a>
+  </div>
+
+  <div id="content" style="display:none">
+    <div id="stat-grid" class="stat-grid"></div>
+    <div id="charts"></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://sfocotdzsoboxcfhhjcj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmb2NvdGR6c29ib3hjZmhoamNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxNjE4NDksImV4cCI6MjEwMzczNzg0OX0.Eu74hQ2FZZgZMF4LKilS1FKQCm-HuPh6BanhDhu1C1U';
+
+const COLORS = ['#a855f7','#8b5cf6','#7c3aed','#6d28d9','#5b21b6','#4c1d95','#c084fc','#d8b4de'];
+const WARM = ['#f59e0b','#ef4444','#ec4899','#8b5cf6','#06b6d4','#10b981','#a855f7','#f97316'];
+
+async function fetchRows(table, limit=1000) {
+  const url = `${SUPABASE_URL}/rest/v1/${table}?order=created_at.desc&limit=${limit}`;
+  const resp = await fetch(url, {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+    }
+  });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return resp.json();
+}
+
+async function loadStats() {
+  try {
+    const rows = await fetchRows('survey_results', 1000);
+    if (!rows || rows.length === 0) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('empty').style.display = 'block';
+      return;
+    }
+    const data = rows.map(r => ({
+      mbti: r.mbti || '', ageGroup: r.age_group || '', gender: r.gender || '',
+      tierScore: r.tier_score || 0, tier: r.tier || '',
+      parents: r.parents || '', siblings: r.siblings || '',
+      path: r.path || '', evolutionType: r.evolution_type || '',
+      familyModule: r.family_module || '', scores: r.scores || {},
+      trauma: r.trauma || '',
+      m1: r.m1 || [], m2: r.m2 || [], m3: r.m3 || [], m4: r.m4 || [],
+      q7: r.q7 || [], q8: r.q8 || 0, q9: r.q9 || '', q10: r.q10 || [],
+    }));
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+    renderStats(data);
+  } catch (err) {
+    showError(err.message || '网络错误，请稍后重试');
+  }
+}
+
+function showError(msg) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('error').style.display = 'block';
+  document.getElementById('error-msg').textContent = msg;
+}
+
+function countBy(data, key) {
+  const counts = {};
+  data.forEach(d => { const v = d[key]; if (v) counts[v] = (counts[v]||0)+1; });
+  return counts;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function renderStats(data) {
+  const total = data.length;
+  const pathA = data.filter(d => d.path === 'A').length;
+  const pathB = data.filter(d => d.path === 'B').length;
+  const traumaCount = data.filter(d => d.evolutionType && d.evolutionType.includes('创伤')).length;
+
+  document.getElementById('stat-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">总参与人数</div></div>
+    <div class="stat-card"><div class="stat-num">${pathA}</div><div class="stat-label">原生型紫人</div></div>
+    <div class="stat-card"><div class="stat-num">${pathB}</div><div class="stat-label">后天型紫人</div></div>
+    <div class="stat-card"><div class="stat-num">${traumaCount}</div><div class="stat-label">创伤应激型</div></div>
+  `;
+
+  renderSectionHeader('📋 基础信息');
+  renderDonut('Q1 · MBTI 类型分布', countBy(data, 'mbti'), COLORS);
+  renderBar('Q2 · 年龄分布', countBy(data, 'ageGroup'));
+  renderDonut('Q3 · 性别分布', countBy(data, 'gender'), COLORS);
+  const q4c = {};
+  data.forEach(d => { if (d.tierScore) { const s = d.tierScore+'分'; q4c[s]=(q4c[s]||0)+1; }});
+  const q4o = {}; for(let i=1;i<=10;i++){const k=i+'分';if(q4c[k])q4o[k]=q4c[k];}
+  renderBar('Q4 · 物质生活自评（1~10分）', q4o);
+  renderDonut('当前生态位分布', countBy(data, 'tier'), COLORS);
+  renderBar('Q5a · 父母情况', countBy(data, 'parents'), true);
+  renderBar('Q5b · 兄弟姐妹情况', countBy(data, 'siblings'));
+
+  renderSectionHeader('🔀 命运分叉点');
+  renderDonut('Q6 · 先天 vs 后天', {'A·天生如此':pathA,'B·后天转变':pathB}, COLORS);
+  renderBar('演化底色分布', countBy(data, 'evolutionType'), true);
+
+  const pathAData = data.filter(d => d.path === 'A');
+  if (pathAData.length > 0) {
+    renderSectionHeader('🧬 路径甲：原生家庭深度调查');
+    renderBar('原生家庭模组分布', countBy(pathAData, 'familyModule'), true);
+    renderDimScores(pathAData);
+    renderMultiSelect(pathAData, 'm1', 'M1 · 父母最常做出的反应');
+    renderMultiSelect(pathAData, 'm2', 'M2 · 花钱和兴趣班态度');
+    renderMultiSelect(pathAData, 'm3', 'M3 · 饭桌上最常见的聊天话题');
+    renderMultiSelect(pathAData, 'm4', 'M4 · 父母处理分歧的方式');
+  }
+
+  const pathBData = data.filter(d => d.path === 'B');
+  if (pathBData.length > 0) {
+    renderSectionHeader('🩸 路径乙：人生变故深度调查');
+    renderMultiSelect(pathBData, 'q7', 'Q7 · 青春期重大事件');
+    const q8c = {};
+    pathBData.forEach(d => { if(d.q8){q8c[d.q8+'分']=(q8c[d.q8+'分']||0)+1;}});
+    const q8o = {}; for(let i=1;i<=5;i++){const k=i+'分';if(q8c[k])q8o[k]=q8c[k];}
+    renderBar('Q8 · "理性是为了保护自己"认同度（1~5分）', q8o, true);
+    renderBar('Q9 · 是否有心理创伤经历', countBy(pathBData, 'q9'), true);
+    renderMultiSelect(pathBData, 'q10', 'Q10 · 创伤性质分布');
+  }
+}
+
+function renderSectionHeader(title) {
+  const container = document.getElementById('charts');
+  const div = document.createElement('div');
+  div.style.cssText = 'margin:32px 0 16px;padding:10px 16px;font-size:18px;font-weight:800;color:#c084fc;border-bottom:2px solid rgba(168,85,247,0.3);';
+  div.textContent = title;
+  container.appendChild(div);
+}
+
+function renderBar(title, counts, warm) {
+  const entries = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+  if (entries.length === 0) return;
+  const maxVal = Math.max(...entries.map(e => e[1]));
+  const fillClass = warm ? 'bar-fill warm' : 'bar-fill';
+  const container = document.getElementById('charts');
+  const card = document.createElement('div');
+  card.className = 'chart-card';
+  let html = `<div class="chart-title">${title}</div>`;
+  entries.forEach(([label, val]) => {
+    const pct = Math.round(val / maxVal * 100);
+    html += `<div class="bar-row"><div class="bar-label" title="${escapeHtml(label)}">${escapeHtml(label)}</div><div class="bar-track"><div class="${fillClass}" style="width:${pct}%"></div></div><div class="bar-value">${val}</div></div>`;
+  });
+  card.innerHTML = html;
+  container.appendChild(card);
+}
+
+function renderDonut(title, counts, palette) {
+  const entries = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+  if (entries.length === 0) return;
+  const total = entries.reduce((s, e) => s + e[1], 0);
+
+  let gradient = 'conic-gradient(';
+  let acc = 0;
+  entries.forEach(([label, val], i) => {
+    const pct = val / total * 100;
+    const color = palette[i % palette.length];
+    gradient += `${color} ${acc}% ${acc + pct}%, `;
+    acc += pct;
+  });
+  gradient = gradient.slice(0, -2) + ')';
+
+  const container = document.getElementById('charts');
+  const card = document.createElement('div');
+  card.className = 'chart-card';
+
+  let legendHtml = '';
+  entries.forEach(([label, val], i) => {
+    const color = palette[i % palette.length];
+    const pct = Math.round(val / total * 100);
+    legendHtml += `<div class="legend-item"><div class="legend-dot" style="background:${color}"></div>${escapeHtml(label)} <span class="bar-value">${val} (${pct}%)</span></div>`;
+  });
+
+  card.innerHTML = `<div class="chart-title">${title}</div><div class="donut-wrap"><div class="donut" style="background:${gradient}"><div class="donut-center">${total}</div></div><div class="donut-legend">${legendHtml}</div></div>`;
+  container.appendChild(card);
+}
+
+function renderMultiSelect(data, key, title) {
+  const counts = {};
+  data.forEach(d => {
+    const arr = d[key];
+    if (Array.isArray(arr)) {
+      arr.forEach(item => {
+        const text = typeof item === 'string' ? item : (item.text || item.val || String(item));
+        if (text) counts[text] = (counts[text] || 0) + 1;
+      });
+    }
+  });
+  if (Object.keys(counts).length === 0) return;
+  renderBar(title, counts, true);
+}
+
+function renderDimScores(pathAData) {
+  const dims = ['A','B','C','D'];
+  const dimNames = { A:'自主性支持', B:'情感回应性', C:'规则与逻辑性', D:'压力与期望' };
+  const avgs = dims.map(dim => {
+    const scores = pathAData.map(d => d.scores[dim]).filter(s => s !== undefined && s !== null);
+    if (scores.length === 0) return 0;
+    return Math.round(scores.reduce((a,b) => a+b, 0) / scores.length);
+  });
+
+  const container = document.getElementById('charts');
+  const card = document.createElement('div');
+  card.className = 'chart-card';
+  let html = '<div class="chart-title">家庭维度平均分（路径甲，百分制）</div>';
+  dims.forEach((dim, i) => {
+    const score = avgs[i];
+    html += `<div class="dim-row"><div class="dim-label">${dimNames[dim]}</div><div class="dim-bar-track"><div class="dim-bar-fill" style="width:${score}%;background:linear-gradient(90deg,#a855f7,#8b5cf6)">${score}</div></div></div>`;
+  });
+  card.innerHTML = html;
+  container.appendChild(card);
+}
+
+async function loadFeedback() {
+  try {
+    const rows = await fetchRows('survey_feedback', 50);
+    if (!rows || rows.length === 0) return;
+    renderSectionHeader('💬 问卷建议与思考');
+    const container = document.getElementById('charts');
+    const card = document.createElement('div');
+    card.className = 'chart-card';
+    card.innerHTML = `<div class="chart-title">大家的声音（最新 ${rows.length} 条）</div><div class="quote-list" id="feedback-list"></div>`;
+    container.appendChild(card);
+    const listEl = document.getElementById('feedback-list');
+    rows.forEach(r => {
+      if (r.feedback && r.feedback.trim()) {
+        const item = document.createElement('div');
+        item.className = 'quote-item';
+        const date = new Date(r.created_at).toLocaleDateString('zh-CN', { month:'short', day:'numeric' });
+        item.innerHTML = `${escapeHtml(r.feedback)}<span class="count">${date}</span>`;
+        listEl.appendChild(item);
+      }
+    });
+  } catch (e) { /* 忽略反馈加载失败 */ }
+}
+
+loadStats();
+loadFeedback();
+</script>
+</body>
+</html>

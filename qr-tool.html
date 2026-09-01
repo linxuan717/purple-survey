@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>二维码生成器 - 紫人调查问卷</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<style>
+:root {
+  --bg: #0d0b1a;
+  --primary: #a855f7;
+  --primary-light: #c084fc;
+  --accent: #8b5cf6;
+  --text: #e9e7f0;
+  --text-muted: #9ca3af;
+  --border: rgba(168, 85, 247, 0.2);
+  --radius: 16px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: linear-gradient(180deg, #0d0b1a 0%, #1a0f2e 50%, #0d0b1a 100%);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  min-height: 100vh; padding: 40px 20px;
+}
+.container { max-width: 520px; margin: 0 auto; }
+.title {
+  font-size: 24px; font-weight: 800; text-align: center; margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--primary-light), var(--accent));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.subtitle { text-align: center; font-size: 14px; color: var(--text-muted); margin-bottom: 32px; }
+.card {
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+}
+label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--text-muted); }
+input[type="url"], input[type="text"] {
+  width: 100%; padding: 12px 16px;
+  background: rgba(0,0,0,0.2); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text); font-size: 15px;
+  font-family: inherit;
+}
+input:focus { outline: none; border-color: var(--primary); }
+.hint { font-size: 12px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
+.btn {
+  display: block; width: 100%; padding: 14px;
+  border: none; border-radius: 12px; font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: inherit; margin-top: 16px; transition: all 0.2s;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--primary));
+  color: #fff; box-shadow: 0 4px 16px rgba(168, 85, 247, 0.3);
+}
+.btn-primary:hover { transform: translateY(-1px); }
+.btn-secondary {
+  background: rgba(139, 92, 246, 0.1); color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { background: rgba(139, 92, 246, 0.2); }
+.qr-display {
+  display: flex; justify-content: center; align-items: center;
+  padding: 24px; background: #fff; border-radius: var(--radius);
+  margin-top: 20px; min-height: 200px;
+}
+.qr-display.empty::before {
+  content: '二维码将显示在这里'; color: #999; font-size: 14px;
+}
+.qr-display img, .qr-display canvas { display: block; }
+.steps {
+  font-size: 13px; color: var(--text-muted); line-height: 1.8;
+  padding: 16px; background: rgba(0,0,0,0.15); border-radius: 12px;
+  border-left: 3px solid var(--accent); margin-top: 20px;
+}
+.steps strong { color: var(--primary-light); }
+.steps ol { padding-left: 20px; margin-top: 8px; }
+.steps li { margin-bottom: 6px; }
+.size-selector {
+  display: flex; gap: 8px; margin-top: 12px;
+}
+.size-btn {
+  flex: 1; padding: 8px; border: 1px solid var(--border);
+  background: rgba(0,0,0,0.2); border-radius: 8px;
+  color: var(--text-muted); font-size: 13px; cursor: pointer;
+  font-family: inherit; transition: all 0.2s;
+}
+.size-btn.active { border-color: var(--primary); color: var(--primary-light); background: rgba(168,85,247,0.1); }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1 class="title">二维码生成器</h1>
+  <p class="subtitle">紫人调查问卷 · 扫码传播工具</p>
+
+  <div class="card">
+    <label>问卷网页的线上地址（URL）</label>
+    <input type="url" id="url-input" placeholder="例如：https://yourname.github.io/survey.html" value="">
+    <p class="hint">先将 survey.html 上传到免费托管平台（见下方说明），然后把得到的网址粘贴到这里。</p>
+
+    <label style="margin-top:16px">二维码尺寸</label>
+    <div class="size-selector">
+      <button class="size-btn" data-size="200" onclick="selectSize(this)">小 (200px)</button>
+      <button class="size-btn active" data-size="300" onclick="selectSize(this)">中 (300px)</button>
+      <button class="size-btn" data-size="500" onclick="selectSize(this)">大 (500px)</button>
+    </div>
+
+    <button class="btn btn-primary" onclick="generateQR()">生成二维码</button>
+  </div>
+
+  <div class="card">
+    <div id="qr-result" class="qr-display empty"></div>
+    <button class="btn btn-secondary" id="download-btn" style="display:none" onclick="downloadQR()">下载二维码图片</button>
+  </div>
+
+  <div class="steps">
+    <strong>📋 托管 + 生成完整步骤：</strong>
+    <ol>
+      <li>注册 <strong>GitHub</strong> 账号（免费）</li>
+      <li>创建新仓库，上传 survey.html 文件</li>
+      <li>进入仓库 Settings → Pages → Source 选 main 分支 → Save</li>
+      <li>等待1~2分钟，页面会显示一个网址如 <code>https://用户名.github.io/仓库名/survey.html</code></li>
+      <li>把该网址粘贴到上方输入框，点击生成二维码</li>
+      <li>下载二维码图片，即可用于抖音传播</li>
+    </ol>
+    <p style="margin-top:12px"><strong>替代方案：</strong>Vercel / Netlify / Cloudflare Pages，均可免费托管，拖拽上传即可获得公网地址。</p>
+  </div>
+</div>
+
+<script>
+let currentQR = null;
+let currentSize = 300;
+
+function selectSize(btn) {
+  document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentSize = parseInt(btn.dataset.size);
+}
+
+function generateQR() {
+  const url = document.getElementById('url-input').value.trim();
+  if (!url) {
+    alert('请输入问卷网页的线上地址');
+    return;
+  }
+  const display = document.getElementById('qr-result');
+  display.innerHTML = '';
+  display.classList.remove('empty');
+  currentQR = new QRCode(display, {
+    text: url,
+    width: currentSize,
+    height: currentSize,
+    colorDark: '#0d0b1a',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H,
+  });
+  document.getElementById('download-btn').style.display = 'block';
+}
+
+function downloadQR() {
+  const img = document.querySelector('#qr-result img') || document.querySelector('#qr-result canvas');
+  if (!img) return;
+  let dataUrl;
+  if (img.tagName === 'CANVAS') {
+    dataUrl = img.toDataURL('image/png');
+  } else {
+    dataUrl = img.src;
+  }
+  const link = document.createElement('a');
+  link.download = '紫人调查问卷_二维码.png';
+  link.href = dataUrl;
+  link.click();
+}
+</script>
+</body>
+</html>
