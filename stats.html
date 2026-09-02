@@ -184,6 +184,21 @@ body {
   background: var(--primary); color: #fff; border-radius: 8px;
   text-decoration: none; font-size: 14px; border: none; cursor: pointer;
 }
+.filter-btn {
+  padding: 8px 18px; border: 1px solid var(--border);
+  background: var(--bg-card); color: var(--text);
+  border-radius: 20px; font-size: 14px; cursor: pointer;
+  transition: all 0.2s; font-weight: 600;
+}
+.filter-btn:hover { border-color: var(--primary); }
+.filter-btn.active {
+  background: var(--primary); color: #fff; border-color: var(--primary);
+}
+.filter-btn.export-btn {
+  background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.4); color: #10b981;
+  margin-left: auto;
+}
+.filter-btn.export-btn:hover { background: #10b981; color: #fff; }
 </style>
 </head>
 <body>
@@ -211,6 +226,12 @@ body {
 
   <div id="content" style="display:none">
     <div id="stat-grid" class="stat-grid"></div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">全部数据</button>
+      <button class="filter-btn" data-filter="A" onclick="setFilter('A')">🌱 先天型</button>
+      <button class="filter-btn" data-filter="B" onclick="setFilter('B')">🔥 后天型</button>
+      <button class="filter-btn export-btn" onclick="exportCSV()">📥 导出CSV</button>
+    </div>
     <div id="charts"></div>
   </div>
 </div>
@@ -221,6 +242,54 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const COLORS = ['#a855f7','#8b5cf6','#7c3aed','#6d28d9','#5b21b6','#4c1d95','#c084fc','#d8b4de'];
 const WARM = ['#f59e0b','#ef4444','#ec4899','#8b5cf6','#06b6d4','#10b981','#a855f7','#f97316'];
+
+let allData = [];
+let currentFilter = 'all';
+
+function setFilter(filter) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === filter);
+  });
+  const container = document.getElementById('charts');
+  container.innerHTML = '';
+  const filtered = filter === 'all' ? allData : allData.filter(d => d.path === filter);
+  renderStats(filtered);
+}
+
+function exportCSV() {
+  if (allData.length === 0) { alert('暂无数据可导出'); return; }
+  const headers = ['序号','MBTI','年龄','性别','物质自评','生态位','父母情况','兄弟姐妹','演化路径','演化底色','家庭模组','自主性%','情感回应%','规则逻辑%','压力期望%','创伤印记','M1','M2','M3','M4','Q7','Q8','Q9','Q10','提交时间'];
+  const dims = ['A','B','C','D'];
+  const rows = allData.map((d, i) => [
+    i+1, d.mbti, d.ageGroup, d.gender, d.tierScore, d.tier,
+    d.parents, d.siblings,
+    d.path === 'A' ? '先天型' : '后天型',
+    d.evolutionType, d.familyModule,
+    d.scores.A || '', d.scores.B || '', d.scores.C || '', d.scores.D || '',
+    d.trauma,
+    Array.isArray(d.m1) ? d.m1.join('; ') : '', Array.isArray(d.m2) ? d.m2.join('; ') : '',
+    Array.isArray(d.m3) ? d.m3.join('; ') : '', Array.isArray(d.m4) ? d.m4.join('; ') : '',
+    Array.isArray(d.q7) ? d.q7.join('; ') : '', d.q8, d.q9,
+    Array.isArray(d.q10) ? d.q10.join('; ') : '',
+    d.created_at || ''
+  ]);
+
+  const csv = [headers, ...rows].map(row =>
+    row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+  ).join('\n');
+
+  const bom = '\uFEFF';
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `紫人调查数据_${new Date().toLocaleDateString('zh-CN').replace(/\//g,'')}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 async function fetchRows(table, limit=1000) {
   const url = `${SUPABASE_URL}/rest/v1/${table}?order=created_at.desc&limit=${limit}`;
@@ -251,7 +320,9 @@ async function loadStats() {
       trauma: r.trauma || '',
       m1: r.m1 || [], m2: r.m2 || [], m3: r.m3 || [], m4: r.m4 || [],
       q7: r.q7 || [], q8: r.q8 || 0, q9: r.q9 || '', q10: r.q10 || [],
+      created_at: r.created_at || '',
     }));
+    allData = data;
     document.getElementById('loading').style.display = 'none';
     document.getElementById('content').style.display = 'block';
     renderStats(data);
