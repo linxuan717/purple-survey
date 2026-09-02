@@ -58,7 +58,6 @@ body {
 .chart-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--primary-light); }
 .chart-wrap { position: relative; }
 
-/* CSS Bar Chart */
 .bar-row { display: flex; align-items: center; margin-bottom: 10px; gap: 8px; }
 .bar-label {
   flex: 0 0 auto; max-width: 55%; font-size: 13px; color: var(--text);
@@ -80,7 +79,6 @@ body {
   flex: 0 0 auto; font-size: 13px; color: var(--text-muted); min-width: 28px; text-align: right;
 }
 
-/* CSS Donut Chart */
 .donut-wrap { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
 .donut {
   width: 120px; height: 120px; border-radius: 50%;
@@ -96,7 +94,6 @@ body {
 .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px; }
 .legend-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
 
-/* Dimension Score Bars */
 .dim-row { margin-bottom: 14px; }
 .dim-label { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
 .dim-bar-track {
@@ -108,12 +105,69 @@ body {
   transition: width 0.6s ease;
 }
 
-.quote-list { display: flex; flex-direction: column; gap: 8px; }
-.quote-item {
-  background: rgba(168,85,247,0.06); border-left: 3px solid var(--primary);
-  padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 14px; color: var(--text);
+.insight-box {
+  margin: 12px 0 20px; padding: 16px 20px;
+  background: rgba(168,85,247,0.08);
+  border-left: 4px solid var(--primary);
+  border-radius: 0 12px 12px 0;
+  font-size: 14px; color: var(--text); line-height: 1.8;
 }
-.quote-item .count { float: right; color: var(--text-dim); font-size: 12px; }
+.insight-box .insight-title {
+  font-weight: 700; color: var(--primary-light); margin-bottom: 8px; font-size: 15px;
+}
+
+.crosstab-table {
+  width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px;
+}
+.crosstab-table th {
+  background: rgba(168,85,247,0.15); padding: 8px 10px; text-align: center;
+  font-weight: 600; color: var(--primary-light); border-radius: 4px;
+}
+.crosstab-table td {
+  padding: 8px 10px; text-align: center; border-bottom: 1px solid rgba(168,85,247,0.1);
+}
+.crosstab-table td.group-label { text-align: left; color: var(--text); font-weight: 600; }
+.crosstab-table td.highlight { color: var(--primary-light); font-weight: 700; }
+
+.comment-section { margin-top: 16px; }
+.comment-input-area {
+  margin-bottom: 20px;
+}
+.comment-input {
+  width: 100%; padding: 14px 16px;
+  background: rgba(0,0,0,0.2); border: 1px solid var(--border);
+  border-radius: 12px; color: var(--text);
+  font-size: 14px; font-family: inherit;
+  min-height: 80px; resize: vertical;
+}
+.comment-input:focus { outline: none; border-color: var(--primary); }
+.comment-input::placeholder { color: var(--text-dim); }
+.comment-btn {
+  margin-top: 10px; padding: 10px 24px;
+  background: var(--primary); color: #fff; border: none;
+  border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600;
+  transition: opacity 0.2s;
+}
+.comment-btn:hover { opacity: 0.85; }
+.comment-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.comment-list { display: flex; flex-direction: column; gap: 12px; }
+.comment-item {
+  background: rgba(168,85,247,0.06); border: 1px solid rgba(168,85,247,0.1);
+  border-radius: 12px; padding: 14px 16px;
+}
+.comment-item .comment-meta {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  font-size: 12px; color: var(--text-dim);
+}
+.comment-item .comment-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.comment-item .comment-text {
+  font-size: 14px; color: var(--text); line-height: 1.6;
+}
 
 .loading { text-align: center; padding: 60px 20px; color: var(--text-muted); }
 .loading .spinner {
@@ -224,11 +278,17 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+function avg(arr) {
+  if (!arr || arr.length === 0) return 0;
+  return arr.reduce((a,b) => a+b, 0) / arr.length;
+}
+
 function renderStats(data) {
   const total = data.length;
   const pathA = data.filter(d => d.path === 'A').length;
   const pathB = data.filter(d => d.path === 'B').length;
   const traumaCount = data.filter(d => d.evolutionType && d.evolutionType.includes('创伤')).length;
+  const awakenCount = data.filter(d => d.evolutionType && d.evolutionType.includes('觉醒')).length;
 
   document.getElementById('stat-grid').innerHTML = `
     <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">总参与人数</div></div>
@@ -237,7 +297,7 @@ function renderStats(data) {
     <div class="stat-card"><div class="stat-num">${traumaCount}</div><div class="stat-label">创伤应激型</div></div>
   `;
 
-  renderSectionHeader('📋 基础信息');
+  renderSectionHeader('📋 基础信息分布');
   renderDonut('Q1 · MBTI 类型分布', countBy(data, 'mbti'), COLORS);
   renderBar('Q2 · 年龄分布', countBy(data, 'ageGroup'));
   renderDonut('Q3 · 性别分布', countBy(data, 'gender'), COLORS);
@@ -249,19 +309,21 @@ function renderStats(data) {
   renderBar('Q5a · 父母情况', countBy(data, 'parents'), true);
   renderBar('Q5b · 兄弟姐妹情况', countBy(data, 'siblings'));
 
-  renderSectionHeader('🔀 命运分叉点');
-  renderDonut('Q6 · 先天 vs 后天', {'A·天生如此':pathA,'B·后天转变':pathB}, COLORS);
+  renderSectionHeader('🔀 先天型 vs 后天型');
+  renderDonut('Q6 · 演化路径分布', {'🌱 天生如此（先天型）':pathA,'🔥 后天转变（后天型）':pathB}, COLORS);
   renderBar('演化底色分布', countBy(data, 'evolutionType'), true);
 
   const pathAData = data.filter(d => d.path === 'A');
   if (pathAData.length > 0) {
-    renderSectionHeader('🧬 路径甲：原生家庭深度调查');
+    renderSectionHeader('🏠 路径甲：原生家庭深度调查');
     renderBar('原生家庭模组分布', countBy(pathAData, 'familyModule'), true);
     renderDimScores(pathAData);
     renderMultiSelect(pathAData, 'm1', 'M1 · 父母最常做出的反应');
     renderMultiSelect(pathAData, 'm2', 'M2 · 花钱和兴趣班态度');
     renderMultiSelect(pathAData, 'm3', 'M3 · 饭桌上最常见的聊天话题');
     renderMultiSelect(pathAData, 'm4', 'M4 · 父母处理分歧的方式');
+
+    renderCrossAnalysis(pathAData);
   }
 
   const pathBData = data.filter(d => d.path === 'B');
@@ -274,7 +336,245 @@ function renderStats(data) {
     renderBar('Q8 · "理性是为了保护自己"认同度（1~5分）', q8o, true);
     renderBar('Q9 · 是否有心理创伤经历', countBy(pathBData, 'q9'), true);
     renderMultiSelect(pathBData, 'q10', 'Q10 · 创伤性质分布');
+
+    renderTraumaAnalysis(pathBData, pathAData);
   }
+}
+
+function renderCrossAnalysis(pathAData) {
+  renderSectionHeader('🔬 交叉分析：家庭构成如何塑造紫人');
+
+  const dims = ['A','B','C','D'];
+  const dimNames = { A:'自主性支持', B:'情感回应性', C:'规则与逻辑性', D:'压力与期望' };
+  const dimEmojis = { A:'🧠', B:'❤️', C:'📐', D:'🎯' };
+
+  const overallAvg = {};
+  dims.forEach(dim => {
+    const scores = pathAData.map(d => d.scores[dim]).filter(s => s !== undefined && s !== null);
+    overallAvg[dim] = Math.round(avg(scores));
+  });
+
+  renderSectionHeader('');
+  const container = document.getElementById('charts');
+
+  const parentsGroups = {
+    '父母双全': pathAData.filter(d => d.parents && d.parents.includes('双全')),
+    '父母离异': pathAData.filter(d => d.parents && d.parents.includes('离异')),
+    '单亲/其他': pathAData.filter(d => d.parents && (d.parents.includes('单亲') || d.parents.includes('其他'))),
+  };
+
+  const card1 = document.createElement('div');
+  card1.className = 'chart-card';
+  let html1 = '<div class="chart-title">📊 父母情况 × 维度平均分（百分制）</div>';
+  html1 += '<table class="crosstab-table"><thead><tr><th>维度</th>';
+  Object.keys(parentsGroups).forEach(g => { html1 += `<th>${g}<br><span style="font-size:11px;color:var(--text-dim)">(${parentsGroups[g].length}人)</span></th>`; });
+  html1 += `<th>全体均值</th></tr></thead><tbody>`;
+  dims.forEach(dim => {
+    html += `<tr><td class="group-label">${dimEmojis[dim]} ${dimNames[dim]}</td>`;
+    Object.keys(parentsGroups).forEach(g => {
+      const group = parentsGroups[g];
+      const scores = group.map(d => d.scores[dim]).filter(s => s !== undefined && s !== null);
+      const a = Math.round(avg(scores));
+      const diff = a - overallAvg[dim];
+      const cls = diff > 5 ? 'highlight' : '';
+      const sign = diff > 0 ? '+' : '';
+      html1 += `<td class="${cls}">${a}${diff !== 0 ? ` <span style="font-size:11px;color:var(--text-dim)">${sign}${diff}</span>` : ''}</td>`;
+    });
+    html1 += `<td style="color:var(--primary-light);font-weight:700">${overallAvg[dim]}</td></tr>`;
+  });
+  html1 += '</tbody></table>';
+  card1.innerHTML = html1;
+  container.appendChild(card1);
+
+  const sibGroups = {
+    '独生子女': pathAData.filter(d => d.siblings === '独生子女'),
+    '非独生子女': pathAData.filter(d => d.siblings && d.siblings !== '独生子女'),
+  };
+
+  const card2 = document.createElement('div');
+  card2.className = 'chart-card';
+  let html2 = '<div class="chart-title">📊 独生 vs 非独生 × 维度平均分（百分制）</div>';
+  html2 += '<table class="crosstab-table"><thead><tr><th>维度</th>';
+  Object.keys(sibGroups).forEach(g => { html2 += `<th>${g}<br><span style="font-size:11px;color:var(--text-dim)">(${sibGroups[g].length}人)</span></th>`; });
+  html2 += `<th>全体均值</th></tr></thead><tbody>`;
+  dims.forEach(dim => {
+    html2 += `<tr><td class="group-label">${dimEmojis[dim]} ${dimNames[dim]}</td>`;
+    Object.keys(sibGroups).forEach(g => {
+      const group = sibGroups[g];
+      const scores = group.map(d => d.scores[dim]).filter(s => s !== undefined && s !== null);
+      const a = Math.round(avg(scores));
+      const diff = a - overallAvg[dim];
+      const cls = diff > 5 ? 'highlight' : '';
+      const sign = diff > 0 ? '+' : '';
+      html2 += `<td class="${cls}">${a}${diff !== 0 ? ` <span style="font-size:11px;color:var(--text-dim)">${sign}${diff}</span>` : ''}</td>`;
+    });
+    html2 += `<td style="color:var(--primary-light);font-weight:700">${overallAvg[dim]}</td></tr>`;
+  });
+  html2 += '</tbody></table>';
+  card2.innerHTML = html2;
+  container.appendChild(card2);
+
+  const moduleByParents = {};
+  Object.keys(parentsGroups).forEach(g => {
+    const group = parentsGroups[g];
+    if (group.length > 0) {
+      const modules = countBy(group, 'familyModule');
+      const topModule = Object.entries(modules).sort((a,b) => b[1]-a[1])[0];
+      moduleByParents[g] = { module: topModule[0], count: topModule[1], total: group.length };
+    }
+  });
+
+  const card3 = document.createElement('div');
+  card3.className = 'chart-card';
+  let html3 = '<div class="chart-title">🏠 不同家庭构成的典型模组</div>';
+  Object.keys(moduleByParents).forEach(g => {
+    const m = moduleByParents[g];
+    const pct = Math.round(m.count / m.total * 100);
+    html3 += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(168,85,247,0.1);">`;
+    html3 += `<span style="font-size:14px;">${g}</span>`;
+    html3 += `<span style="font-size:14px;color:var(--primary-light);font-weight:600;">${m.module} <span style="font-size:12px;color:var(--text-dim)">(${pct}%)</span></span>`;
+    html3 += `</div>`;
+  });
+  card3.innerHTML = html3;
+  container.appendChild(card3);
+
+  const insights = generateCrossInsights(parentsGroups, sibGroups, overallAvg, moduleByParents);
+  if (insights) {
+    const card4 = document.createElement('div');
+    card4.className = 'insight-box';
+    card4.innerHTML = `<div class="insight-title">🔍 数据洞察</div>${insights}`;
+    container.appendChild(card4);
+  }
+}
+
+function generateCrossInsights(parentsGroups, sibGroups, overallAvg, moduleByParents) {
+  let insights = '';
+
+  const onlyChild = sibGroups['独生子女'];
+  const nonOnlyChild = sibGroups['非独生子女'];
+
+  if (onlyChild.length >= 2 && nonOnlyChild.length >= 2) {
+    const aDiff = avg(onlyChild.map(d => d.scores['A']).filter(s => s != null)) - avg(nonOnlyChild.map(d => d.scores['A']).filter(s => s != null));
+    if (Math.abs(aDiff) > 3) {
+      if (aDiff > 0) {
+        insights += `<p>📌 独生子女在"自主性支持"维度上平均高出非独生子女 <strong>${Math.round(aDiff)}</strong> 分——父母精力集中，给了更大的自主空间。</p>`;
+      } else {
+        insights += `<p>📌 非独生子女在"自主性支持"维度上平均高出独生子女 <strong>${Math.round(-aDiff)}</strong> 分——可能因为家庭内部需要更多协商。</p>`;
+      }
+    }
+
+    const bDiff = avg(onlyChild.map(d => d.scores['B']).filter(s => s != null)) - avg(nonOnlyChild.map(d => d.scores['B']).filter(s => s != null));
+    if (Math.abs(bDiff) > 3) {
+      if (bDiff > 0) {
+        insights += `<p>📌 独生子女在"情感回应性"维度上平均高出 <strong>${Math.round(bDiff)}</strong> 分——独享父母的情感关注。</p>`;
+      } else {
+        insights += `<p>📌 非独生子女在"情感回应性"上反而高出 <strong>${Math.round(-bDiff)}</strong> 分——手足互动可能补充了情感回应。</p>`;
+      }
+    }
+  }
+
+  const intact = parentsGroups['父母双全'];
+  const divorced = parentsGroups['父母离异'];
+  if (intact.length >= 2 && divorced.length >= 2) {
+    const bDiff = avg(intact.map(d => d.scores['B']).filter(s => s != null)) - avg(divorced.map(d => d.scores['B']).filter(s => s != null));
+    if (bDiff > 3) {
+      insights += `<p>📌 父母双全家庭的紫人，"情感回应性"平均高出离异家庭 <strong>${Math.round(bDiff)}</strong> 分——家庭结构完整性与情感供给正相关。</p>`;
+    }
+
+    const cDiff = avg(intact.map(d => d.scores['C']).filter(s => s != null)) - avg(divorced.map(d => d.scores['C']).filter(s => s != null));
+    if (cDiff < -3) {
+      insights += `<p>📌 离异家庭出身的紫人，"规则与逻辑性"反而高出双全家庭 <strong>${Math.round(-cDiff)}</strong> 分——可能因为更早学会自我建构秩序。</p>`;
+    }
+  }
+
+  Object.keys(moduleByParents).forEach(g => {
+    const m = moduleByParents[g];
+    const pct = Math.round(m.count / m.total * 100);
+    if (pct >= 40) {
+      insights += `<p>📌 ${g}中最常见的模组是"<strong>${m.module}</strong>"（${pct}%）——`;
+      if (m.module === '理性温室') insights += '自主性与规则感双高，理性是被浇灌出来的。';
+      else if (m.module === '自由孤岛') insights += '高自主低情感，理性是被迫自给自足。';
+      else if (m.module === '权威高塔') insights += '高规则高压力，理性可能是在压抑中长出的防御。';
+      else if (m.module === '混沌暖巢') insights += '高情感低规则，理性可能是混乱中自行摸索出的锚点。';
+      else insights += '混合型家庭配方。';
+      insights += '</p>';
+    }
+  });
+
+  if (!insights) {
+    insights = '<p>📌 数据量较少，交叉分析需要更多样本才能呈现显著差异。当前数据已展示各分组的维度均值对比，样本量增大后差异会更明显。</p>';
+  }
+
+  return insights;
+}
+
+function renderTraumaAnalysis(pathBData, pathAData) {
+  renderSectionHeader('🔬 交叉分析：先天型 vs 后天型对比');
+
+  const container = document.getElementById('charts');
+  const card = document.createElement('div');
+  card.className = 'chart-card';
+
+  let html = '<div class="chart-title">⚡ 先天型 vs 后天型 · 关键指标对比</div>';
+  html += '<table class="crosstab-table"><thead><tr><th>指标</th>';
+  html += `<th>🌱 先天型<br><span style="font-size:11px;color:var(--text-dim)">(${pathAData.length}人)</span></th>`;
+  html += `<th>🔥 后天型<br><span style="font-size:11px;color:var(--text-dim)">(${pathBData.length}人)</span></th>`;
+  html += '</tr></thead><tbody>';
+
+  const aAvg = Math.round(avg(pathAData.map(d => d.tierScore).filter(s => s != null)));
+  const bAvg = Math.round(avg(pathBData.map(d => d.tierScore).filter(s => s != null)));
+  html += `<tr><td class="group-label">📍 物质自评（1-10分）</td><td>${aAvg}</td><td>${bAvg}</td></tr>`;
+
+  const aModules = countBy(pathAData, 'familyModule');
+  const topA = Object.entries(aModules).sort((a,b) => b[1]-a[1])[0];
+  html += `<tr><td class="group-label">🏠 典型家庭模组</td><td>${topA ? topA[0] : '-'}</td><td colspan="1">—</td></tr>`;
+
+  const bDefense = avg(pathBData.map(d => d.q8).filter(s => s != null && s > 0));
+  html += `<tr><td class="group-label">🛡️ 防御性理性指数</td><td>—</td><td>${bDefense > 0 ? Math.round(bDefense * 10) / 10 + '/5' : '-'}</td></tr>`;
+
+  const bTrauma = countBy(pathBData, 'q9');
+  const traumaYes = (bTrauma['有，至今仍有影响'] || 0) + (bTrauma['有，但已基本消化'] || 0);
+  html += `<tr><td class="group-label">🩸 有创伤经历</td><td>—</td><td>${traumaYes}/${pathBData.length}</td></tr>`;
+
+  html += '</tbody></table>';
+  card.innerHTML = html;
+  container.appendChild(card);
+
+  const insights = generateTraumaInsights(pathAData, pathBData, aAvg, bAvg, bDefense, traumaYes);
+  if (insights) {
+    const card2 = document.createElement('div');
+    card2.className = 'insight-box';
+    card2.innerHTML = `<div class="insight-title">🔍 数据洞察</div>${insights}`;
+    container.appendChild(card2);
+  }
+}
+
+function generateTraumaInsights(pathAData, pathBData, aAvg, bAvg, bDefense, traumaYes) {
+  let insights = '';
+
+  if (pathBData.length >= 2) {
+    insights += `<p>📌 后天型紫人中，${traumaYes}/${pathBData.length} 人有过创伤经历——他们的理性可能不全是"天生"，部分是"被逼出来的铠甲"。</p>`;
+  }
+  if (bDefense > 0) {
+    if (bDefense >= 3.5) {
+      insights += `<p>📌 后天型紫人的"防御性理性"平均指数为 <strong>${Math.round(bDefense*10)/10}/5</strong>——理性已成为高度防御工具，而非纯粹的思维方式。</p>`;
+    } else if (bDefense >= 2.5) {
+      insights += `<p>📌 后天型紫人的"防御性理性"平均指数为 <strong>${Math.round(bDefense*10)/10}/5</strong>——理性和情感在拉锯中。</p>`;
+    } else {
+      insights += `<p>📌 后天型紫人的"防御性理性"平均指数为 <strong>${Math.round(bDefense*10)/10}/5</strong>——理性更多是工具而非盾牌。</p>`;
+    }
+  }
+  if (aAvg > 0 && bAvg > 0 && Math.abs(aAvg - bAvg) >= 1) {
+    if (aAvg > bAvg) {
+      insights += `<p>📌 先天型紫人物质自评（${aAvg}）高于后天型（${bAvg}）——后天型可能更多来自经济压力或阶层变动。</p>`;
+    } else {
+      insights += `<p>📌 后天型紫人物质自评（${bAvg}）反而高于先天型（${aAvg}）——后天转变未必与经济困境直接挂钩。</p>`;
+    }
+  }
+  if (!insights) {
+    insights = '<p>📌 数据量较少，先天/后天对比需要更多样本。当前已展示两组关键指标差异。</p>';
+  }
+  return insights;
 }
 
 function renderSectionHeader(title) {
@@ -350,6 +650,7 @@ function renderMultiSelect(data, key, title) {
 function renderDimScores(pathAData) {
   const dims = ['A','B','C','D'];
   const dimNames = { A:'自主性支持', B:'情感回应性', C:'规则与逻辑性', D:'压力与期望' };
+  const dimEmojis = { A:'🧠', B:'❤️', C:'📐', D:'🎯' };
   const avgs = dims.map(dim => {
     const scores = pathAData.map(d => d.scores[dim]).filter(s => s !== undefined && s !== null);
     if (scores.length === 0) return 0;
@@ -359,10 +660,10 @@ function renderDimScores(pathAData) {
   const container = document.getElementById('charts');
   const card = document.createElement('div');
   card.className = 'chart-card';
-  let html = '<div class="chart-title">家庭维度平均分（路径甲，百分制）</div>';
+  let html = '<div class="chart-title">📊 家庭维度平均分（路径甲，百分制）</div>';
   dims.forEach((dim, i) => {
     const score = avgs[i];
-    html += `<div class="dim-row"><div class="dim-label">${dimNames[dim]}</div><div class="dim-bar-track"><div class="dim-bar-fill" style="width:${score}%;background:linear-gradient(90deg,#a855f7,#8b5cf6)">${score}</div></div></div>`;
+    html += `<div class="dim-row"><div class="dim-label">${dimEmojis[dim]} ${dimNames[dim]}</div><div class="dim-bar-track"><div class="dim-bar-fill" style="width:${score}%;background:linear-gradient(90deg,#a855f7,#8b5cf6)">${score}</div></div></div>`;
   });
   card.innerHTML = html;
   container.appendChild(card);
@@ -370,25 +671,116 @@ function renderDimScores(pathAData) {
 
 async function loadFeedback() {
   try {
-    const rows = await fetchRows('survey_feedback', 50);
-    if (!rows || rows.length === 0) return;
-    renderSectionHeader('💬 问卷建议与思考');
+    const rows = await fetchRows('survey_feedback', 200);
+    renderSectionHeader('💬 紫人讨论区');
     const container = document.getElementById('charts');
+
     const card = document.createElement('div');
-    card.className = 'chart-card';
-    card.innerHTML = `<div class="chart-title">大家的声音（最新 ${rows.length} 条）</div><div class="quote-list" id="feedback-list"></div>`;
+    card.className = 'chart-card comment-section';
+    card.innerHTML = `
+      <div class="chart-title">发表你的看法</div>
+      <div class="comment-input-area">
+        <textarea class="comment-input" id="comment-input" placeholder="你对这份问卷有什么想法？你的紫人故事？你的不同见解？匿名发表，大家都能看到。"></textarea>
+        <button class="comment-btn" id="comment-submit" onclick="submitComment()">匿名发布</button>
+      </div>
+      <div style="font-size:13px;color:var(--text-dim);margin-bottom:16px;" id="comment-count"></div>
+      <div class="comment-list" id="comment-list"></div>
+    `;
     container.appendChild(card);
-    const listEl = document.getElementById('feedback-list');
-    rows.forEach(r => {
-      if (r.feedback && r.feedback.trim()) {
-        const item = document.createElement('div');
-        item.className = 'quote-item';
-        const date = new Date(r.created_at).toLocaleDateString('zh-CN', { month:'short', day:'numeric' });
-        item.innerHTML = `${escapeHtml(r.feedback)}<span class="count">${date}</span>`;
-        listEl.appendChild(item);
+
+    const listEl = document.getElementById('comment-list');
+    const countEl = document.getElementById('comment-count');
+
+    if (!rows || rows.length === 0) {
+      countEl.textContent = '还没有人发表看法，来当第一个吧。';
+    } else {
+      countEl.textContent = `共 ${rows.length} 条发言`;
+      rows.forEach((r, i) => {
+        if (r.feedback && r.feedback.trim()) {
+          const item = document.createElement('div');
+          item.className = 'comment-item';
+          const date = new Date(r.created_at).toLocaleDateString('zh-CN', { month:'short', day:'numeric' });
+          const avatarColors = ['linear-gradient(135deg,#a855f7,#8b5cf6)','linear-gradient(135deg,#f59e0b,#ef4444)','linear-gradient(135deg,#06b6d4,#10b981)','linear-gradient(135deg,#ec4899,#8b5cf6)','linear-gradient(135deg,#f97316,#ec4899)'];
+          const avatarColor = avatarColors[i % avatarColors.length];
+          const avatarChar = String.fromCharCode(65 + (i % 26));
+          item.innerHTML = `
+            <div class="comment-meta">
+              <div class="comment-avatar" style="background:${avatarColor}">${avatarChar}</div>
+              <span>紫人网友 · ${date}</span>
+            </div>
+            <div class="comment-text">${escapeHtml(r.feedback)}</div>
+          `;
+          listEl.appendChild(item);
+        }
+      });
+    }
+  } catch (e) {
+    try {
+      const rows = await fetchRows('survey_feedback', 200);
+      if (rows && rows.length > 0) {
+        renderSectionHeader('💬 紫人讨论区');
+        const container = document.getElementById('charts');
+        const card = document.createElement('div');
+        card.className = 'chart-card';
+        card.innerHTML = `<div class="chart-title">大家的声音（${rows.length}条）</div><div class="comment-list" id="fallback-list"></div>`;
+        container.appendChild(card);
+        const listEl = document.getElementById('fallback-list');
+        rows.forEach(r => {
+          if (r.feedback && r.feedback.trim()) {
+            const item = document.createElement('div');
+            item.className = 'comment-item';
+            item.innerHTML = `<div class="comment-text">${escapeHtml(r.feedback)}</div>`;
+            listEl.appendChild(item);
+          }
+        });
       }
+    } catch(e2) {}
+  }
+}
+
+async function submitComment() {
+  const input = document.getElementById('comment-input');
+  const btn = document.getElementById('comment-submit');
+  const text = input.value.trim();
+  if (!text) { alert('请输入内容'); return; }
+  if (text.length > 500) { alert('内容不能超过500字'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '发布中...';
+
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/survey_feedback`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ feedback: text })
     });
-  } catch (e) { /* 忽略反馈加载失败 */ }
+    if (resp.ok) {
+      input.value = '';
+      btn.textContent = '已发布！';
+      btn.style.background = '#10b981';
+      setTimeout(() => {
+        btn.textContent = '匿名发布';
+        btn.style.background = '';
+        btn.disabled = false;
+        loadFeedback();
+      }, 1500);
+    } else {
+      throw new Error('HTTP ' + resp.status);
+    }
+  } catch (e) {
+    btn.textContent = '发布失败';
+    btn.style.background = '#ef4444';
+    setTimeout(() => {
+      btn.textContent = '匿名发布';
+      btn.style.background = '';
+      btn.disabled = false;
+    }, 2000);
+  }
 }
 
 loadStats();
