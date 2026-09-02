@@ -518,24 +518,6 @@ textarea.text-input { min-height: 72px; }
     <div class="option-list" id="m4-list"></div>
   </div>
 
-  <div class="likert-divider">模块三：开放式回溯</div>
-  <div class="module-intro" style="margin-bottom:16px;">没有选项，把你脑子里第一个蹦出来的画面填进去就行。</div>
-
-  <div class="q-block">
-    <div class="q-label"><span class="q-num">O1</span>家庭氛围隐喻（填空）</div>
-    <input type="text" class="text-input" id="o1" placeholder='例："永远阴天的梅雨季"'>
-  </div>
-
-  <div class="q-block">
-    <div class="q-label"><span class="q-num">O2</span>童年高频魔咒（填空）</div>
-    <input type="text" class="text-input" id="o2" placeholder='例："哭有什么用，想办法啊"'>
-  </div>
-
-  <div class="q-block">
-    <div class="q-label"><span class="q-num">O3</span>家庭潜规则（填空）</div>
-    <input type="text" class="text-input" id="o3" placeholder='例："只要成绩好，干什么都行"'>
-  </div>
-
   <div class="btn-row" style="margin-top:24px">
     <button class="btn btn-back" onclick="goTo('page-pathA-m1')">返回</button>
     <button class="btn btn-primary" onclick="submitPathAM2()">生成结果</button>
@@ -667,9 +649,6 @@ async function submitResultToBackend() {
     m2: a.m2 || [],
     m3: a.m3 || [],
     m4: a.m4 || [],
-    o1: a.o1 || '',
-    o2: a.o2 || '',
-    o3: a.o3 || '',
     q7: a.q7 || [],
     q8: a.q8 || 0,
     q9: a.q9 || '',
@@ -1078,9 +1057,6 @@ function submitPathAM2() {
       state.answers[key + '_other'] = otherInput.value.trim();
     }
   });
-  state.answers.o1 = document.getElementById('o1') ? document.getElementById('o1').value.trim() : '';
-  state.answers.o2 = document.getElementById('o2') ? document.getElementById('o2').value.trim() : '';
-  state.answers.o3 = document.getElementById('o3') ? document.getElementById('o3').value.trim() : '';
   if (state.answers.m1.length === 0) { showToast('请至少选择一项 M1'); return; }
   calculatePathA();
   submitResultToBackend();
@@ -1333,9 +1309,7 @@ function renderResult() {
     });
     html += '</div>';
 
-    // ---- 氛围标签 ----
-    const o1 = state.answers.o1 || '';
-    const o2 = state.answers.o2 || '';
+    // ---- 家庭分歧模式 ----
     const m4 = state.answers.m4 || [];
     const m4Map = {
       '理性辩论，摆事实讲道理，不伤和气': '理性辩论',
@@ -1347,8 +1321,6 @@ function renderResult() {
     const m4Text = m4.length > 0 ? (m4Map[m4[0]] || m4[0]) : '未填写';
 
     html += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">';
-    if (o1) { html += resultItem('🌦️', '家庭氛围隐喻', `"${o1}"`, true); }
-    if (o2) { html += resultItem('🎙️', '童年高频魔咒', `"${o2}"`, true); }
     html += resultItem('💬', '家庭分歧模式', m4Text);
     html += '</div>';
 
