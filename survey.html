@@ -518,6 +518,24 @@ textarea.text-input { min-height: 72px; }
     <div class="option-list" id="m4-list"></div>
   </div>
 
+  <div class="likert-divider">模块三：开放式回溯</div>
+  <div class="module-intro" style="margin-bottom:16px;">没有选项，把你脑子里第一个蹦出来的画面填进去就行。</div>
+
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">O1</span>家庭氛围隐喻（填空）</div>
+    <input type="text" class="text-input" id="o1" placeholder='例："永远阴天的梅雨季"'>
+  </div>
+
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">O2</span>童年高频魔咒（填空）</div>
+    <input type="text" class="text-input" id="o2" placeholder='例："哭有什么用，想办法啊"'>
+  </div>
+
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">O3</span>家庭潜规则（填空）</div>
+    <input type="text" class="text-input" id="o3" placeholder='例："只要成绩好，干什么都行"'>
+  </div>
+
   <div class="btn-row" style="margin-top:24px">
     <button class="btn btn-back" onclick="goTo('page-pathA-m1')">返回</button>
     <button class="btn btn-primary" onclick="submitPathAM2()">生成结果</button>
@@ -649,6 +667,9 @@ async function submitResultToBackend() {
     m2: a.m2 || [],
     m3: a.m3 || [],
     m4: a.m4 || [],
+    o1: a.o1 || '',
+    o2: a.o2 || '',
+    o3: a.o3 || '',
     q7: a.q7 || [],
     q8: a.q8 || 0,
     q9: a.q9 || '',
@@ -1057,6 +1078,9 @@ function submitPathAM2() {
       state.answers[key + '_other'] = otherInput.value.trim();
     }
   });
+  state.answers.o1 = document.getElementById('o1') ? document.getElementById('o1').value.trim() : '';
+  state.answers.o2 = document.getElementById('o2') ? document.getElementById('o2').value.trim() : '';
+  state.answers.o3 = document.getElementById('o3') ? document.getElementById('o3').value.trim() : '';
   if (state.answers.m1.length === 0) { showToast('请至少选择一项 M1'); return; }
   calculatePathA();
   submitResultToBackend();
@@ -1149,6 +1173,9 @@ function calculatePathA() {
     '过渡/混合型': '你的家庭画像呈现多元特征，既有某些维度的支持，也有另一些维度的缺失。紫人的底色，可能是多种家庭力量博弈后的平衡态——既有被允许的部分，也有被逼出来的部分。',
   };
 
+  const parents = state.answers.q5a || '未填写';
+  const siblings = state.answers.q5b || '未填写';
+
   state.result = {
     type: '原生型紫人',
     module: module,
@@ -1156,6 +1183,9 @@ function calculatePathA() {
     analysis: analysisMap[module],
     scores: { A: A_pct, B: B_pct, C: C_pct, D: D_pct },
     path: 'A',
+    parents: parents,
+    siblings: siblings,
+    rawScores: { A: A_sum, B: B_sum, C: C_sum, D: D_sum },
   };
 }
 
@@ -1215,38 +1245,145 @@ function getTier(score) {
 function renderResult() {
   const r = state.result;
   const container = document.getElementById('result-content');
-  let html = '';
+  if (!r) { container.innerHTML = '<p>暂无结果，请重新测试</p>'; return; }
 
-  html += '<div class="result-card">';
+  let html = '<div class="result-card">';
+
+  // ---- 头部 ----
   html += '<div class="result-header">';
-  html += '<div class="result-badge">紫人画像报告</div>';
+  html += '<div class="result-badge">🧬 紫人画像报告</div>';
+  let pathLabel = '', pathIcon = '';
+  if (r.path === 'A') { pathLabel = '先天型（原生紫人）'; pathIcon = '🌱'; }
+  else if (r.path === 'B') {
+    if (r.type && r.type.includes('创伤应激')) { pathLabel = '后天型（创伤应激）'; pathIcon = '⚡'; }
+    else { pathLabel = '后天型（觉醒转型）'; pathIcon = '🔥'; }
+  }
+  html += `<div style="font-size:14px;color:var(--text-muted);margin-bottom:4px;">${pathIcon} 演化路径：${pathLabel}</div>`;
   html += `<div class="result-type">${r.type}</div>`;
   html += '</div>';
 
   if (r.path === 'A') {
-    // 分数图表
-    html += '<div class="result-score-chart">';
-    ['A:自主性支持','B:情感回应性','C:规则与逻辑性','D:压力与期望'].forEach(label => {
-      const dim = label.split(':')[0];
-      const pct = r.scores[dim];
-      const name = label.split(':')[1];
+    // ---- 家庭构成 + 模组联动 ----
+    const parentsMap = {
+      '父母双全且未离异': '父母双全', '父母离异，随母亲': '离异随母',
+      '父母离异，随父亲': '离异随父', '父母离异，轮流抚养': '离异轮流',
+      '单亲（一方去世）': '单亲', '其他': '其他抚养人'
+    };
+    const siblingsMap = {
+      '独生子女': '独生子女', '有1个姐姐': '有1个姐姐', '有1个哥哥': '有1个哥哥',
+      '有1个弟弟': '有1个弟弟', '有1个妹妹': '有1个妹妹',
+      '有1个姐姐 + 1个弟弟（姐弟组合）': '1姐1弟', '有1个哥哥 + 1个妹妹（兄妹组合）': '1哥1妹',
+      '有2个姐姐': '2个姐姐', '有2个哥哥': '2个哥哥',
+      '有3个及以上的姐姐': '3+姐姐', '有3个及以上的哥哥': '3+哥哥',
+      '其他复杂组合': '其他组合'
+    };
+    const pLabel = parentsMap[r.parents] || r.parents;
+    const sLabel = siblingsMap[r.siblings] || r.siblings;
+
+    html += resultItem('👨‍👩‍👧', '家庭构成', `${pLabel} · ${sLabel}`);
+    html += resultItem('🏠', '原生家庭模组', r.module);
+
+    // 联动结论
+    let linkageText = '';
+    if (sLabel === '独生子女' && r.module === '理性温室') {
+      linkageText = '🧩 "独生子女 + 理性温室"是典型的"高自主性孵化器"——父母精力集中，规则清晰且允许反驳，你的理性是被充分浇灌出来的。';
+    } else if (sLabel === '独生子女' && r.module === '自由孤岛') {
+      linkageText = '🧩 "独生子女 + 自由孤岛"意味着"被迫独立"——家庭给了你极大的自主空间，但情感回应的缺失让你习惯了自己跟自己对话。';
+    } else if (sLabel !== '独生子女' && (sLabel.includes('姐姐') || sLabel.includes('哥哥'))) {
+      if (r.module === '理性温室') {
+        linkageText = '🧩 有年长手足 + 理性温室：家庭内部早有一套需要协调的秩序，你的"规则逻辑性"得分往往高于独生子女紫人——理性是在手足博弈中磨出来的。';
+      } else {
+        linkageText = '🧩 有年长手足的家庭，"自主性"和"情感回应"之间张力更复杂——你的紫人底色可能是在手足竞争中博弈出来的。';
+      }
+    } else if (r.parents && r.parents.includes('离异') && r.module === '自由孤岛') {
+      linkageText = '🧩 父母离异 + 自由孤岛：你比同龄人更早接管了自己的生活秩序——理性是你为自己搭建的避难所。';
+    } else {
+      linkageText = `🧩 你的家庭构成（${pLabel} · ${sLabel}）与"${r.module}"模组在紫人群体中构成一种特定的成长配方——自主性、规则感、情感回应的配比，共同塑造了你抽离的底色。`;
+    }
+    html += `<div style="margin:12px 0 16px;padding:12px 16px;background:rgba(168,85,247,0.08);border-radius:10px;font-size:14px;color:var(--text-muted);border-left:3px solid var(--primary);">${linkageText}</div>`;
+
+    // ---- 维度得分 vs 常模 ----
+    const norm = { A: 20, B: 17, C: 13, D: 12 };
+    const maxScores = { A: 30, B: 30, C: 20, D: 20 };
+    const dimNames = {
+      A: { label: '自主性支持', emoji: '🧠' },
+      B: { label: '情感回应性', emoji: '❤️' },
+      C: { label: '规则与逻辑性', emoji: '📐' },
+      D: { label: '压力与期望', emoji: '🎯' }
+    };
+    const raw = r.rawScores || { A: 0, B: 0, C: 0, D: 0 };
+
+    html += '<div style="margin:16px 0;padding:16px;background:rgba(0,0,0,0.15);border-radius:12px;">';
+    html += '<div style="font-size:13px;color:var(--text-dim);margin-bottom:12px;font-weight:600;">📊 各维度得分对比（紫人常模）</div>';
+    ['A','B','C','D'].forEach(dim => {
+      const userScore = raw[dim];
+      const avg = norm[dim];
+      const max = maxScores[dim];
+      const diff = userScore - avg;
+      const diffText = diff > 0 ? `高出平均 ${diff} 分` : (diff < 0 ? `低于平均 ${Math.abs(diff)} 分` : '持平平均');
+      const emoji = diff > 0 ? '📈' : (diff < 0 ? '📉' : '➖');
       html += `
-        <div class="score-bar-row">
-          <div class="score-bar-label"><span>${name}</span><span>${Math.round(pct)}%</span></div>
-          <div class="score-bar-track"><div class="score-bar-fill" style="width:${pct}%"></div></div>
+        <div style="margin-bottom:10px;font-size:14px;">
+          <div style="display:flex;justify-content:space-between;">
+            <span>${dimNames[dim].emoji} ${dimNames[dim].label}</span>
+            <span><strong style="color:var(--primary-light);">${userScore}</strong>/${max} &nbsp;|&nbsp; 紫人平均 ${avg}</span>
+          </div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:2px;">${emoji} ${diffText}</div>
         </div>`;
     });
     html += '</div>';
 
-    html += resultItem('🏠', '原生家庭模组', r.module);
-    html += resultItem('📍', '当前生态位', r.niche);
+    // ---- 氛围标签 ----
+    const o1 = state.answers.o1 || '';
+    const o2 = state.answers.o2 || '';
+    const m4 = state.answers.m4 || [];
+    const m4Map = {
+      '理性辩论，摆事实讲道理，不伤和气': '理性辩论',
+      '情绪化争吵，声音很大，有时会摔东西': '情绪化争吵',
+      '长期冷战，互不搭理，靠你传话': '长期冷战',
+      '避开你私下解决，你几乎感觉不到他们吵架': '私下解决',
+      '一方绝对强势，另一方妥协退让': '一方强势',
+    };
+    const m4Text = m4.length > 0 ? (m4Map[m4[0]] || m4[0]) : '未填写';
+
+    html += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">';
+    if (o1) { html += resultItem('🌦️', '家庭氛围隐喻', `"${o1}"`, true); }
+    if (o2) { html += resultItem('🎙️', '童年高频魔咒', `"${o2}"`, true); }
+    html += resultItem('💬', '家庭分歧模式', m4Text);
+    html += '</div>';
+
   } else {
+    // ---- 路径乙结果 ----
     if (r.trauma && r.trauma !== '无显著创伤归类') {
       html += resultItem('🩸', '创伤印记', r.trauma);
     }
-    html += resultItem('📍', '当前生态位', r.niche);
+    const q8 = state.answers.q8;
+    if (q8 !== null && q8 !== undefined) {
+      let defenseText = '';
+      if (q8 <= 2) defenseText = '低度防御：理性更多是工具，而非盾牌。';
+      else if (q8 === 3) defenseText = '中度防御：理性与情感在拉锯。';
+      else defenseText = '高度防御：你的理性是一层厚厚的铠甲。';
+      html += resultItem('🛡️', `防御性理性指数（Q8得分：${q8}/5）`, defenseText);
+    }
+    const parentsMap = {
+      '父母双全且未离异': '父母双全', '父母离异，随母亲': '离异随母',
+      '父母离异，随父亲': '离异随父', '父母离异，轮流抚养': '离异轮流',
+      '单亲（一方去世）': '单亲', '其他': '其他抚养人'
+    };
+    const siblingsMap = {
+      '独生子女': '独生子女', '有1个姐姐': '有1个姐姐', '有1个哥哥': '有1个哥哥',
+      '有1个弟弟': '有1个弟弟', '有1个妹妹': '有1个妹妹',
+      '有1个姐姐 + 1个弟弟（姐弟组合）': '1姐1弟', '有1个哥哥 + 1个妹妹（兄妹组合）': '1哥1妹',
+      '有2个姐姐': '2个姐姐', '有2个哥哥': '2个哥哥',
+      '有3个及以上的姐姐': '3+姐姐', '有3个及以上的哥哥': '3+哥哥',
+      '其他复杂组合': '其他组合'
+    };
+    const pBg = parentsMap[state.answers.q5a] || state.answers.q5a || '未填写';
+    const sBg = siblingsMap[state.answers.q5b] || state.answers.q5b || '未填写';
+    html += `<div style="margin-top:12px;padding:10px 14px;background:rgba(0,0,0,0.1);border-radius:8px;font-size:13px;color:var(--text-dim);">📋 家庭背景参考：${pBg} · ${sBg}</div>`;
   }
 
+  html += resultItem('📍', '当前生态位', r.niche);
   html += `<div class="result-analysis">${r.analysis}</div>`;
   html += '</div>';
 
