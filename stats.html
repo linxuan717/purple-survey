@@ -441,7 +441,7 @@ function renderCrossAnalysis(pathAData) {
   Object.keys(parentsGroups).forEach(g => { html1 += `<th>${g}<br><span style="font-size:11px;color:var(--text-dim)">(${parentsGroups[g].length}人)</span></th>`; });
   html1 += `<th>全体均值</th></tr></thead><tbody>`;
   dims.forEach(dim => {
-    html += `<tr><td class="group-label">${dimEmojis[dim]} ${dimNames[dim]}</td>`;
+    html1 += `<tr><td class="group-label">${dimEmojis[dim]} ${dimNames[dim]}</td>`;
     Object.keys(parentsGroups).forEach(g => {
       const group = parentsGroups[g];
       const scores = group.map(d => d.scores[dim]).filter(s => s !== undefined && s !== null);
