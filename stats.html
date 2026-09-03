@@ -266,7 +266,7 @@ body {
 
   <div id="error" class="error-box" style="display:none">
     <p id="error-msg">加载失败</p>
-    <button class="retry-btn" onclick="location.reload()">重新加载</button>
+    <button class="retry-btn" onclick="retryLoad()">重新加载</button>
   </div>
 
   <div id="empty" class="empty-box" style="display:none">
@@ -343,16 +343,39 @@ function exportCSV() {
   URL.revokeObjectURL(url);
 }
 
+async function fetchWithTimeout(url, options = {}, timeout = 12000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+  try {
+    const resp = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(timer);
+    return resp;
+  } catch (e) {
+    clearTimeout(timer);
+    if (e.name === 'AbortError') throw new Error('请求超时，请检查网络后重试');
+    throw e;
+  }
+}
+
 async function fetchRows(table, limit=1000) {
   const url = `${SUPABASE_URL}/rest/v1/${table}?order=created_at.desc&limit=${limit}`;
-  const resp = await fetch(url, {
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
+  let lastErr;
+  for (let i = 0; i < 3; i++) {
+    try {
+      const resp = await fetchWithTimeout(url, {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+        }
+      });
+      if (!resp.ok) throw new Error(`服务器错误 ${resp.status}`);
+      return resp.json();
+    } catch (e) {
+      lastErr = e;
+      if (i < 2) await new Promise(r => setTimeout(r, 1000 * (i + 1)));
     }
-  });
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-  return resp.json();
+  }
+  throw lastErr;
 }
 
 async function loadStats() {
@@ -386,8 +409,17 @@ async function loadStats() {
 
 function showError(msg) {
   document.getElementById('loading').style.display = 'none';
+  document.getElementById('content').style.display = 'none';
+  document.getElementById('empty').style.display = 'none';
   document.getElementById('error').style.display = 'block';
   document.getElementById('error-msg').textContent = msg;
+}
+
+function retryLoad() {
+  document.getElementById('error').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+  loadStats();
+  loadPageViews();
 }
 
 function countBy(data, key) {
@@ -883,6 +915,8 @@ async function likeComment(commentId, btn) {
   const isLiked = likedArr.includes(commentId);
   const rpcName = isLiked ? 'decrement_likes' : 'increment_likes';
   try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
     const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${rpcName}`, {
       method: 'POST',
       headers: {
@@ -890,8 +924,10 @@ async function likeComment(commentId, btn) {
         'Authorization': `Bearer ${SUPABASE_KEY}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ feedback_id: commentId })
+      body: JSON.stringify({ feedback_id: commentId }),
+      signal: controller.signal
     });
+    clearTimeout(timer);
     if (resp.ok) {
       if (isLiked) {
         const idx = likedArr.indexOf(commentId);
@@ -928,6 +964,8 @@ async function submitComment() {
   btn.textContent = '发布中...';
 
   try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
     const resp = await fetch(`${SUPABASE_URL}/rest/v1/survey_feedback`, {
       method: 'POST',
       headers: {
@@ -936,8 +974,10 @@ async function submitComment() {
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal'
       },
-      body: JSON.stringify({ feedback: text })
+      body: JSON.stringify({ feedback: text }),
+      signal: controller.signal
     });
+    clearTimeout(timer);
     if (resp.ok) {
       input.value = '';
       btn.textContent = '已发布！';
@@ -1010,7 +1050,9 @@ async function loadPageViews() {
       <div class="hourly-labels">${labelsHtml}</div>
     `;
     container.insertBefore(card, container.firstChild);
-  } catch(e) {}
+  } catch(e) {
+    console.warn('访问统计加载失败:', e.message);
+  }
 }
 </script>
 </body>
