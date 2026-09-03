@@ -843,7 +843,7 @@ async function loadFeedback() {
           <div class="comment-text">${escapeHtml(r.feedback)}</div>
           <div class="comment-footer">
             <button class="like-btn ${isLiked ? 'liked' : ''}" ${isLiked ? 'disabled' : ''} onclick="likeComment(${r.id})">
-              ${isLiked ? '❤️' : '👍'} ${likes > 0 ? likes : '点赞'}
+              ${isLiked ? '❤️' : '👍'} ${likes >= 10000 ? (likes/10000).toFixed(1).replace(/\.0$/,'') + 'w' : likes}
             </button>
           </div>
         `;
