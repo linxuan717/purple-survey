@@ -655,6 +655,8 @@ async function submitResultToBackend() {
     q10: a.q10 || [],
   };
   try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 15000);
       const resp = await fetch(`${SUPABASE_URL}/rest/v1/survey_results`, {
         method: 'POST',
         headers: {
@@ -663,12 +665,16 @@ async function submitResultToBackend() {
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal'
         },
-        body: JSON.stringify(row)
+        body: JSON.stringify(row),
+        signal: controller.signal
       });
+      clearTimeout(timer);
       if (resp.ok) showToast('数据已保存');
       else showToast('数据上传失败，请检查网络');
     } catch(e) {
-      showToast('数据上传失败，请检查网络');
+      clearTimeout(timer);
+      if (e.name === 'AbortError') showToast('网络超时，请检查网络后重试');
+      else showToast('数据上传失败，请检查网络');
     }
 }
 
