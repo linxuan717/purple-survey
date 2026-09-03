@@ -798,11 +798,11 @@ async function loadFeedback() {
     const rows = await fetchRows('survey_feedback', 200);
     const container = document.getElementById('charts');
     container.querySelectorAll('.comment-section').forEach(el => el.remove());
-    renderSectionHeader('💬 紫人讨论区');
 
     const card = document.createElement('div');
     card.className = 'chart-card comment-section';
     card.innerHTML = `
+      <div style="margin:32px 0 16px;padding:10px 16px;font-size:18px;font-weight:800;color:#c084fc;border-bottom:2px solid rgba(168,85,247,0.3);">💬 紫人讨论区</div>
       <div class="chart-title">发表你的看法</div>
       <div class="comment-input-area">
         <textarea class="comment-input" id="comment-input" placeholder="你对这份问卷有什么想法？你的紫人故事？你的不同见解？匿名发表，大家都能看到。"></textarea>
@@ -845,7 +845,7 @@ async function loadFeedback() {
           </div>
           <div class="comment-text">${escapeHtml(r.feedback)}</div>
           <div class="comment-footer">
-            <button class="like-btn ${isLiked ? 'liked' : ''}" ${isLiked ? 'disabled' : ''} onclick="likeComment(${r.id}, this)">
+            <button class="like-btn ${isLiked ? 'liked' : ''}" onclick="likeComment(${r.id}, this)">
               ${isLiked ? '❤️' : '👍'} ${likes > 0 ? (likes >= 10000 ? (likes/10000).toFixed(1).replace(/\.0$/,'') + 'w' : likes) : '点赞'}
             </button>
           </div>
@@ -859,10 +859,9 @@ async function loadFeedback() {
       if (rows && rows.length > 0) {
         const container = document.getElementById('charts');
         container.querySelectorAll('.comment-section').forEach(el => el.remove());
-        renderSectionHeader('💬 紫人讨论区');
         const card = document.createElement('div');
         card.className = 'chart-card comment-section';
-        card.innerHTML = `<div class="chart-title">大家的声音（${rows.length}条）</div><div class="comment-list" id="fallback-list"></div>`;
+        card.innerHTML = `<div style="margin:32px 0 16px;padding:10px 16px;font-size:18px;font-weight:800;color:#c084fc;border-bottom:2px solid rgba(168,85,247,0.3);">💬 紫人讨论区</div><div class="chart-title">大家的声音（${rows.length}条）</div><div class="comment-list" id="fallback-list"></div>`;
         container.appendChild(card);
         const listEl = document.getElementById('fallback-list');
         rows.forEach(r => {
@@ -880,8 +879,11 @@ async function loadFeedback() {
 
 async function likeComment(commentId, btn) {
   if (btn) btn.disabled = true;
+  const likedArr = JSON.parse(localStorage.getItem('liked_comments') || '[]');
+  const isLiked = likedArr.includes(commentId);
+  const rpcName = isLiked ? 'decrement_likes' : 'increment_likes';
   try {
-    const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_likes`, {
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${rpcName}`, {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_KEY,
@@ -891,14 +893,18 @@ async function likeComment(commentId, btn) {
       body: JSON.stringify({ feedback_id: commentId })
     });
     if (resp.ok) {
-      const liked = JSON.parse(localStorage.getItem('liked_comments') || '[]');
-      liked.push(commentId);
-      localStorage.setItem('liked_comments', JSON.stringify(liked));
+      if (isLiked) {
+        const idx = likedArr.indexOf(commentId);
+        if (idx > -1) likedArr.splice(idx, 1);
+      } else {
+        likedArr.push(commentId);
+      }
+      localStorage.setItem('liked_comments', JSON.stringify(likedArr));
       loadFeedback();
     } else if (btn) {
       btn.disabled = false;
       const orig = btn.innerHTML;
-      btn.innerHTML = '👍 点赞失败';
+      btn.innerHTML = '操作失败';
       setTimeout(() => { btn.innerHTML = orig; }, 2000);
     }
   } catch(e) {
