@@ -168,6 +168,21 @@ body {
 .comment-item .comment-text {
   font-size: 14px; color: var(--text); line-height: 1.6;
 }
+.comment-item .comment-footer {
+  display: flex; align-items: center; gap: 12px; margin-top: 8px;
+}
+.like-btn {
+  background: none; border: 1px solid var(--border); color: var(--text-muted);
+  padding: 4px 12px; border-radius: 16px; font-size: 13px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 4px; transition: all .2s;
+}
+.like-btn:hover { border-color: var(--primary); color: var(--primary); }
+.like-btn.liked { background: rgba(168,85,247,0.15); border-color: var(--primary); color: var(--primary); }
+.like-btn:disabled { cursor: default; opacity: 0.7; }
+.top-badge {
+  font-size: 11px; color: #f59e0b; background: rgba(245,158,11,0.1);
+  padding: 2px 8px; border-radius: 8px; margin-left: 4px;
+}
 
 .loading { text-align: center; padding: 60px 20px; color: var(--text-muted); }
 .loading .spinner {
@@ -743,8 +758,9 @@ function renderDimScores(pathAData) {
 async function loadFeedback() {
   try {
     const rows = await fetchRows('survey_feedback', 200);
-    renderSectionHeader('💬 紫人讨论区');
     const container = document.getElementById('charts');
+    container.querySelectorAll('.comment-section').forEach(el => el.remove());
+    renderSectionHeader('💬 紫人讨论区');
 
     const card = document.createElement('div');
     card.className = 'chart-card comment-section';
@@ -766,33 +782,48 @@ async function loadFeedback() {
       countEl.textContent = '还没有人发表看法，来当第一个吧。';
     } else {
       countEl.textContent = `共 ${rows.length} 条发言`;
-      rows.forEach((r, i) => {
-        if (r.feedback && r.feedback.trim()) {
-          const item = document.createElement('div');
-          item.className = 'comment-item';
-          const date = new Date(r.created_at).toLocaleDateString('zh-CN', { month:'short', day:'numeric' });
-          const avatarColors = ['linear-gradient(135deg,#a855f7,#8b5cf6)','linear-gradient(135deg,#f59e0b,#ef4444)','linear-gradient(135deg,#06b6d4,#10b981)','linear-gradient(135deg,#ec4899,#8b5cf6)','linear-gradient(135deg,#f97316,#ec4899)'];
-          const avatarColor = avatarColors[i % avatarColors.length];
-          const avatarChar = String.fromCharCode(65 + (i % 26));
-          item.innerHTML = `
-            <div class="comment-meta">
-              <div class="comment-avatar" style="background:${avatarColor}">${avatarChar}</div>
-              <span>紫人网友 · ${date}</span>
-            </div>
-            <div class="comment-text">${escapeHtml(r.feedback)}</div>
-          `;
-          listEl.appendChild(item);
-        }
+      const likedSet = new Set(JSON.parse(localStorage.getItem('liked_comments') || '[]'));
+      const sorted = rows.filter(r => r.feedback && r.feedback.trim())
+        .sort((a, b) => {
+          const la = a.likes || 0, lb = b.likes || 0;
+          if (lb !== la) return lb - la;
+          return new Date(b.created_at) - new Date(a.created_at);
+        });
+      sorted.forEach((r, i) => {
+        const item = document.createElement('div');
+        item.className = 'comment-item';
+        if (i === 0 && (r.likes || 0) > 0) item.style.borderColor = 'rgba(245,158,11,0.4)';
+        const date = new Date(r.created_at).toLocaleDateString('zh-CN', { month:'short', day:'numeric' });
+        const avatarColors = ['linear-gradient(135deg,#a855f7,#8b5cf6)','linear-gradient(135deg,#f59e0b,#ef4444)','linear-gradient(135deg,#06b6d4,#10b981)','linear-gradient(135deg,#ec4899,#8b5cf6)','linear-gradient(135deg,#f97316,#ec4899)'];
+        const avatarColor = avatarColors[i % avatarColors.length];
+        const avatarChar = String.fromCharCode(65 + (i % 26));
+        const likes = r.likes || 0;
+        const isLiked = likedSet.has(r.id);
+        const topBadge = (i === 0 && likes > 0) ? '<span class="top-badge">🔥 热门</span>' : '';
+        item.innerHTML = `
+          <div class="comment-meta">
+            <div class="comment-avatar" style="background:${avatarColor}">${avatarChar}</div>
+            <span>紫人网友 · ${date}${topBadge}</span>
+          </div>
+          <div class="comment-text">${escapeHtml(r.feedback)}</div>
+          <div class="comment-footer">
+            <button class="like-btn ${isLiked ? 'liked' : ''}" ${isLiked ? 'disabled' : ''} onclick="likeComment(${r.id})">
+              ${isLiked ? '❤️' : '👍'} ${likes > 0 ? likes : '点赞'}
+            </button>
+          </div>
+        `;
+        listEl.appendChild(item);
       });
     }
   } catch (e) {
     try {
       const rows = await fetchRows('survey_feedback', 200);
       if (rows && rows.length > 0) {
-        renderSectionHeader('💬 紫人讨论区');
         const container = document.getElementById('charts');
+        container.querySelectorAll('.comment-section').forEach(el => el.remove());
+        renderSectionHeader('💬 紫人讨论区');
         const card = document.createElement('div');
-        card.className = 'chart-card';
+        card.className = 'chart-card comment-section';
         card.innerHTML = `<div class="chart-title">大家的声音（${rows.length}条）</div><div class="comment-list" id="fallback-list"></div>`;
         container.appendChild(card);
         const listEl = document.getElementById('fallback-list');
@@ -807,6 +838,26 @@ async function loadFeedback() {
       }
     } catch(e2) {}
   }
+}
+
+async function likeComment(commentId) {
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_likes`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ feedback_id: commentId })
+    });
+    if (resp.ok) {
+      const liked = JSON.parse(localStorage.getItem('liked_comments') || '[]');
+      liked.push(commentId);
+      localStorage.setItem('liked_comments', JSON.stringify(liked));
+      loadFeedback();
+    }
+  } catch(e) {}
 }
 
 async function submitComment() {
