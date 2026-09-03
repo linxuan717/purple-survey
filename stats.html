@@ -734,7 +734,7 @@ function renderDimScores(pathAData) {
   let html = '<div class="chart-title">📊 家庭维度平均分（路径甲，百分制）</div>';
   dims.forEach((dim, i) => {
     const score = avgs[i];
-    html1 += `<div class="dim-row"><div class="dim-label">${dimEmojis[dim]} ${dimNames[dim]}</div><div class="dim-bar-track"><div class="dim-bar-fill" style="width:${score}%;background:linear-gradient(90deg,#a855f7,#8b5cf6)">${score}</div></div></div>`;
+    html += `<div class="dim-row"><div class="dim-label">${dimEmojis[dim]} ${dimNames[dim]}</div><div class="dim-bar-track"><div class="dim-bar-fill" style="width:${score}%;background:linear-gradient(90deg,#a855f7,#8b5cf6)">${score}</div></div></div>`;
   });
   card.innerHTML = html;
   container.appendChild(card);
