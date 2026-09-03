@@ -305,6 +305,8 @@ function setFilter(filter) {
   container.innerHTML = '';
   const filtered = filter === 'all' ? allData : allData.filter(d => d.path === filter);
   renderStats(filtered);
+  loadFeedback();
+  loadPageViews();
 }
 
 function exportCSV() {
@@ -376,6 +378,7 @@ async function loadStats() {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('content').style.display = 'block';
     renderStats(data);
+    loadFeedback();
   } catch (err) {
     showError(err.message || '网络错误，请稍后重试');
   }
@@ -842,8 +845,8 @@ async function loadFeedback() {
           </div>
           <div class="comment-text">${escapeHtml(r.feedback)}</div>
           <div class="comment-footer">
-            <button class="like-btn ${isLiked ? 'liked' : ''}" ${isLiked ? 'disabled' : ''} onclick="likeComment(${r.id})">
-              ${isLiked ? '❤️' : '👍'} ${likes >= 10000 ? (likes/10000).toFixed(1).replace(/\.0$/,'') + 'w' : likes}
+            <button class="like-btn ${isLiked ? 'liked' : ''}" ${isLiked ? 'disabled' : ''} onclick="likeComment(${r.id}, this)">
+              ${isLiked ? '❤️' : '👍'} ${likes > 0 ? (likes >= 10000 ? (likes/10000).toFixed(1).replace(/\.0$/,'') + 'w' : likes) : '点赞'}
             </button>
           </div>
         `;
@@ -875,7 +878,8 @@ async function loadFeedback() {
   }
 }
 
-async function likeComment(commentId) {
+async function likeComment(commentId, btn) {
+  if (btn) btn.disabled = true;
   try {
     const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_likes`, {
       method: 'POST',
@@ -891,8 +895,20 @@ async function likeComment(commentId) {
       liked.push(commentId);
       localStorage.setItem('liked_comments', JSON.stringify(liked));
       loadFeedback();
+    } else if (btn) {
+      btn.disabled = false;
+      const orig = btn.innerHTML;
+      btn.innerHTML = '👍 点赞失败';
+      setTimeout(() => { btn.innerHTML = orig; }, 2000);
     }
-  } catch(e) {}
+  } catch(e) {
+    if (btn) {
+      btn.disabled = false;
+      const orig = btn.innerHTML;
+      btn.innerHTML = '👍 网络异常';
+      setTimeout(() => { btn.innerHTML = orig; }, 2000);
+    }
+  }
 }
 
 async function submitComment() {
@@ -941,13 +957,13 @@ async function submitComment() {
 }
 
 loadStats();
-loadFeedback();
 loadPageViews();
 
 async function loadPageViews() {
   try {
     const rows = await fetchRows('page_views', 5000);
     const container = document.getElementById('charts');
+    container.querySelectorAll('.page-views-card').forEach(el => el.remove());
     const now = new Date();
     const todayStr = now.toISOString().slice(0, 10);
 
@@ -966,7 +982,7 @@ async function loadPageViews() {
     const maxHour = Math.max(...hourly, 1);
 
     const card = document.createElement('div');
-    card.className = 'chart-card';
+    card.className = 'chart-card page-views-card';
     card.style.marginBottom = '16px';
     let barsHtml = '';
     for (let h = 0; h < 24; h++) {
