@@ -757,12 +757,7 @@ function renderBar(title, counts, warm) {
   let html = `<div class="chart-title">${title}</div>`;
   entries.forEach(([label, val]) => {
     const pct = Math.round(val / maxVal * 100);
-    const isLong = label.length > 12;
-    if (isLong) {
-      html += `<div class="bar-row-long"><div class="bar-label-long">${escapeHtml(label)}</div><div class="bar-row-inner"><div class="bar-track"><div class="${fillClass}" style="width:${pct}%"></div></div><div class="bar-value">${val}</div></div></div>`;
-    } else {
-      html += `<div class="bar-row"><div class="bar-label" title="${escapeHtml(label)}">${escapeHtml(label)}</div><div class="bar-track"><div class="${fillClass}" style="width:${pct}%"></div></div><div class="bar-value">${val}</div></div>`;
-    }
+    html += `<div class="bar-row-long"><div class="bar-label-long">${escapeHtml(label)}</div><div class="bar-row-inner"><div class="bar-track"><div class="${fillClass}" style="width:${pct}%"></div></div><div class="bar-value">${val}</div></div></div>`;
   });
   card.innerHTML = html;
   container.appendChild(card);
