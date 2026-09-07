@@ -258,6 +258,22 @@ textarea.text-input { min-height: 72px; }
 .end-icon { font-size: 48px; margin-bottom: 20px; }
 .end-title { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
 .end-desc { font-size: 15px; color: var(--text-muted); }
+/* Screenshot notice */
+.screenshot-notice {
+  display: flex; align-items: center; gap: 12px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(239, 68, 68, 0.1));
+  border: 2px solid rgba(245, 158, 11, 0.4);
+  border-radius: 14px; padding: 16px 18px;
+  margin-bottom: 20px;
+  font-size: 16px; font-weight: 700; color: #fbbf24;
+  text-align: left; line-height: 1.5;
+  animation: pulse-notice 2s ease-in-out infinite;
+}
+.screenshot-notice-icon { font-size: 28px; flex-shrink: 0; }
+@keyframes pulse-notice {
+  0%, 100% { box-shadow: 0 0 12px rgba(245, 158, 11, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); }
+}
 /* Result page */
 .result-card {
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(168, 85, 247, 0.06));
@@ -587,6 +603,10 @@ textarea.text-input { min-height: 72px; }
 <!-- ========== 结果页 ========== -->
 <section id="page-result" class="page">
   <div id="result-content"></div>
+  <div class="screenshot-notice">
+    <span class="screenshot-notice-icon">📸</span>
+    <div>请截图保存测试结果！测试结果仅纳入统计，不做保存，关闭则消失</div>
+  </div>
   <div class="result-actions">
     <button class="btn btn-secondary" onclick="copyResult()">复制结果</button>
     <button class="btn btn-primary" onclick="restart()">重新测试</button>
