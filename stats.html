@@ -60,9 +60,12 @@ body {
 
 .bar-row { display: flex; align-items: center; margin-bottom: 10px; gap: 8px; }
 .bar-label {
-  flex: 0 0 auto; max-width: 55%; font-size: 13px; color: var(--text);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  flex: 0 0 auto; max-width: 65%; font-size: 13px; color: var(--text);
+  line-height: 1.4; word-break: break-all;
 }
+.bar-row-long { margin-bottom: 14px; }
+.bar-label-long { font-size: 13px; color: var(--text); line-height: 1.4; margin-bottom: 6px; word-break: break-all; }
+.bar-row-inner { display: flex; align-items: center; gap: 8px; }
 .bar-track {
   flex: 1; height: 24px; background: rgba(168,85,247,0.08);
   border-radius: 6px; overflow: hidden; position: relative;
@@ -754,7 +757,12 @@ function renderBar(title, counts, warm) {
   let html = `<div class="chart-title">${title}</div>`;
   entries.forEach(([label, val]) => {
     const pct = Math.round(val / maxVal * 100);
-    html += `<div class="bar-row"><div class="bar-label" title="${escapeHtml(label)}">${escapeHtml(label)}</div><div class="bar-track"><div class="${fillClass}" style="width:${pct}%"></div></div><div class="bar-value">${val}</div></div>`;
+    const isLong = label.length > 12;
+    if (isLong) {
+      html += `<div class="bar-row-long"><div class="bar-label-long">${escapeHtml(label)}</div><div class="bar-row-inner"><div class="bar-track"><div class="${fillClass}" style="width:${pct}%"></div></div><div class="bar-value">${val}</div></div></div>`;
+    } else {
+      html += `<div class="bar-row"><div class="bar-label" title="${escapeHtml(label)}">${escapeHtml(label)}</div><div class="bar-track"><div class="${fillClass}" style="width:${pct}%"></div></div><div class="bar-value">${val}</div></div>`;
+    }
   });
   card.innerHTML = html;
   container.appendChild(card);
