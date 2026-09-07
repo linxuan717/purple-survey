@@ -455,7 +455,9 @@ function renderStats(data) {
 
   renderSectionHeader('📋 基础信息分布');
   renderDonut('Q1 · MBTI 类型分布', countBy(data, 'mbti'), COLORS);
-  renderBar('Q2 · 年龄分布', countBy(data, 'ageGroup'));
+  const ageCounts = countBy(data, 'ageGroup');
+  if (ageCounts['18~24岁']) { ageCounts['25岁以下'] = (ageCounts['25岁以下']||0) + ageCounts['18~24岁']; delete ageCounts['18~24岁']; }
+  renderBar('Q2 · 年龄分布', ageCounts);
   renderDonut('Q3 · 性别分布', countBy(data, 'gender'), COLORS);
   const q4c = {};
   data.forEach(d => { if (d.tierScore) { const s = d.tierScore+'分'; q4c[s]=(q4c[s]||0)+1; }});
