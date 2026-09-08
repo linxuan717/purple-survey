@@ -1223,6 +1223,11 @@ function calculatePathB() {
 
   const hasWu = q7.some(c => c && c.includes('无'));
   const hasItems = q7.length > 0 && !hasWu;
+  const hasValueShock = q7.some(c => c && c.includes('价值观'));
+  const hasFamilyShock = q7.some(c => c && c.includes('家庭结构'));
+  const hasBullying = q7.some(c => c && c.includes('霸凌'));
+  const hasBetrayal = q7.some(c => c && c.includes('背叛'));
+  const hasEconomy = q7.some(c => c && c.includes('经济'));
 
   let type;
   if (hasWu) {
@@ -1239,15 +1244,61 @@ function calculatePathB() {
 
   let traumaLabel = '无显著创伤归类';
   if (q10 && q10.length > 0) {
-    // 提取类型简称
     traumaLabel = q10.map(t => {
       const match = t.match(/^[①②③④⑤⑥]/);
       return match ? match[0] + t.split(' ')[0].slice(1) : t;
     }).join(' + ');
   }
 
+  function getAwakeningAnalysis() {
+    if (hasWu) {
+      return '<strong>🌱 自然觉醒型</strong><br>' +
+        '你的紫人底色不是被逼出来的，而是自然而然长出来的。<br><br>' +
+        '你可能在某个普通的下午——也许是读到一本书的某一页，也许是看了一部纪录片，也许只是某天夜里躺在床上突然想通了——就那么"啪"地一下，思维方式切换了。你开始对世界运行的底层规律产生好奇，开始质疑别人习以为常的答案，开始享受用逻辑拆解问题的快感。<br><br>' +
+        '这种觉醒没有剧烈的疼痛，更像是一颗种子遇到了合适的温度和湿度，自己发了芽。你的理性是内生的，不是防御性的——它不需要用"抽离"来保护自己，只是单纯地觉得"用理性看世界更清楚"。<br><br>' +
+        '在紫人群体中，你是相对幸运的一类：没有被创伤塑形的痕迹，理性是你的工具而非盾牌。你可以更自由地在理性和感性之间切换，不必担心投入情感会带来失控。';
+    }
+    const lines = [];
+    lines.push('<strong>🔥 消化觉醒型</strong>');
+    lines.push('你经历过一些事，但你没有被困在里面——你把经历消化了，然后长出了新的自己。');
+    lines.push('');
+    if (hasValueShock) {
+      lines.push('<strong>◦ 价值观破碎后的重建</strong>');
+      lines.push('你曾经深信不疑的东西被现实打碎过。那可能是一段时期的信仰崩塌——你发现世界不是课本里说的那样，不是父母告诉你的那样，也不是你曾经以为的那样。');
+      lines.push('但你没有停在废墟里。你亲手把那些碎片捡起来，一块一块重新拼。拼出来的东西可能不再整齐漂亮，但它是你自己的——是你用思考和验证一砖一瓦搭起来的认知体系。');
+      lines.push('这类觉醒的紫人，往往对"真理"有一种近乎洁癖的执着——你很难再被任何单一叙事说服，因为你知道所有答案都可能只是阶段性正确。');
+    }
+    if (hasFamilyShock) {
+      lines.push('<strong>◦ 家庭变故中的早熟</strong>');
+      lines.push('家庭结构的变化把你从"孩子"的位置上提前拽了下来。你不得不比同龄人更早地面对现实，更早地学会自己做判断、自己扛后果。');
+      lines.push('但特别的是，你没有因此变得愤世嫉俗，反而发展出一种抽离的理性——你学会了站在更高的位置俯瞰自己的处境，像分析一个案例一样分析自己的人生。');
+      lines.push('你的理性是"被迫早熟"结出的意外果实，苦过，但现在是甜的。');
+    }
+    if (hasBullying || hasBetrayal) {
+      lines.push('<strong>◦ 人际伤害后的抽离进化</strong>');
+      lines.push('你曾经在关系里受过伤——可能是被排挤、被背叛、被孤立。那些经历让你对人性的复杂有了切身体会。');
+      lines.push('但你没有变成刺猬。你选择了另一条路：退后一步，用观察者的视角看人与人之间的博弈。你开始理解人性的灰色地带，理解立场如何塑造观点，理解利益如何驱动行为。');
+      lines.push('你的抽离不是冷漠，而是一种自我保护之后的通透——你知道什么时候该投入，什么时候该站在外面看。');
+    }
+    if (hasEconomy) {
+      lines.push('<strong>◦ 生存压力下的现实启蒙</strong>');
+      lines.push('家庭经济的剧烈变化让你过早地看到了生活的底层逻辑——钱是什么，资源怎么分配，人情在利益面前有多脆弱。');
+      lines.push('这种"现实启蒙"往往会催生两种人：一种变得极度功利，另一种变得极度清醒。你是后者。你看透了规则，但没有变得犬儒；你理解了利益，但没有被利益吞噬。');
+      lines.push('你的理性是被现实一巴掌一巴掌拍出来的，扎实、不飘，带着泥土的重量。');
+    }
+    if (!hasValueShock && !hasFamilyShock && !hasBullying && !hasBetrayal && !hasEconomy) {
+      lines.push('你的觉醒路径更像是一种缓慢的积累——读的书、见的人、想过的问题，在某个时间点突然串联了起来。');
+      lines.push('你可能自己都说不清具体是哪一刻变的，就是某一天回头看，发现自己已经和从前不一样了。');
+    }
+    lines.push('');
+    lines.push('<strong>✨ 觉醒型紫人的共同特质：</strong>');
+    lines.push('你对自己的转变有清晰的觉察。你知道自己曾经是什么样，也知道自己为什么变成了现在这样。这种"自知"是你最宝贵的资产——');
+    lines.push('你不会被自己的理性困住，因为你知道理性是怎么来的、有什么用、边界在哪里。你可以随时走进去，也可以随时走出来。');
+    return lines.join('<br>');
+  }
+
   const analysisMap = {
-    '觉醒转型型': '你的紫人底色并非源于创伤，而是某种自然觉醒——也许是认知的成熟，也许是对世界运行方式的顿悟。你的理性是生长出来的，而非被逼出来的。这类紫人通常对自身的转变有清晰的自我觉察。',
+    '觉醒转型型': getAwakeningAnalysis(),
     '创伤应激型': '你的紫人底色，与成长中的创伤经历显著重合。在紫人数据中，这类印记常伴随高防御性理性——理性是你的盾牌，抽离是你的安全距离。这并非缺陷，而是一种生存策略的固化。',
   };
 
