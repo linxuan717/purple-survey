@@ -809,13 +809,26 @@ function renderDonut(title, counts, palette) {
   container.appendChild(card);
 }
 
+// Fix truncated text from old data (ASCII double quotes broke data-text attribute)
+const textFixMap = {
+  '先抱住你或摸摸头，说': '先抱住你或摸摸头，说\u201c没事，人没事就好\u201d',
+  '兴趣可以搞，但必须保证': '兴趣可以搞，但必须保证\u201c对升学/有用\u201d',
+  '支持一切无用的爱好，觉得': '支持一切无用的爱好，觉得\u201c人要有痴迷的东西\u201d',
+  '坐下来帮你拆解前因后果，分析': '坐下来帮你拆解前因后果，分析\u201c哪里错了、下次怎么改\u201d',
+  '一起讨论某个抽象问题（比如': '一起讨论某个抽象问题（比如\u201c人为什么要上学\u201d\u201c公平是什么\u201d）',
+};
+function fixTruncatedText(text) {
+  return textFixMap[text] || text;
+}
+
 function renderMultiSelect(data, key, title) {
   const counts = {};
   data.forEach(d => {
     const arr = d[key];
     if (Array.isArray(arr)) {
       arr.forEach(item => {
-        const text = typeof item === 'string' ? item : (item.text || item.val || String(item));
+        let text = typeof item === 'string' ? item : (item.text || item.val || String(item));
+        text = fixTruncatedText(text);
         if (text) counts[text] = (counts[text] || 0) + 1;
       });
     }
