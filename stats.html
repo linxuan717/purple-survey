@@ -56,6 +56,14 @@ body {
   border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
 }
 .chart-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--primary-light); }
+.info-icon {
+  display: inline-block; width: 20px; height: 20px; line-height: 20px;
+  text-align: center; border-radius: 50%;
+  background: rgba(168, 85, 247, 0.2); color: var(--primary-light);
+  font-size: 12px; cursor: pointer; margin-left: 6px;
+  transition: all 0.2s;
+}
+.info-icon:hover { background: rgba(168, 85, 247, 0.4); transform: scale(1.1); }
 .chart-wrap { position: relative; }
 
 .bar-row { display: flex; align-items: center; margin-bottom: 10px; gap: 8px; }
@@ -477,7 +485,7 @@ function renderStats(data) {
   const pathAData = data.filter(d => d.path === 'A');
   if (pathAData.length > 0) {
     renderSectionHeader('🏠 路径甲：原生家庭深度调查');
-    renderBar('原生家庭模组分布', countBy(pathAData, 'familyModule'), true);
+    renderBar('原生家庭模组分布', countBy(pathAData, 'familyModule'), true, 'openModuleInfo()');
     renderDimScores(pathAData);
     renderMultiSelect(pathAData, 'm1', 'M1 · 父母最常做出的反应');
     renderMultiSelect(pathAData, 'm2', 'M2 · 花钱和兴趣班态度');
@@ -746,7 +754,7 @@ function renderSectionHeader(title) {
   container.appendChild(div);
 }
 
-function renderBar(title, counts, warm) {
+function renderBar(title, counts, warm, infoFn) {
   const entries = Object.entries(counts).sort((a,b) => b[1]-a[1]);
   if (entries.length === 0) return;
   const maxVal = Math.max(...entries.map(e => e[1]));
@@ -754,7 +762,8 @@ function renderBar(title, counts, warm) {
   const container = document.getElementById('charts');
   const card = document.createElement('div');
   card.className = 'chart-card';
-  let html = `<div class="chart-title">${title}</div>`;
+  const infoHtml = infoFn ? `<span class="info-icon" onclick="${infoFn}" title="点击查看说明">ⓘ</span>` : '';
+  let html = `<div class="chart-title">${title} ${infoHtml}</div>`;
   entries.forEach(([label, val]) => {
     const pct = Math.round(val / maxVal * 100);
     html += `<div class="bar-row-long"><div class="bar-label-long">${escapeHtml(label)}</div><div class="bar-row-inner"><div class="bar-track"><div class="${fillClass}" style="width:${pct}%"></div></div><div class="bar-value">${val}</div></div></div>`;
@@ -809,9 +818,9 @@ function renderMultiSelect(data, key, title) {
 }
 
 function renderDimScores(pathAData) {
-  const dims = ['A','B','C','D'];
-  const dimNames = { A:'自主性支持', B:'情感回应性', C:'规则与逻辑性', D:'压力与期望' };
-  const dimEmojis = { A:'🧠', B:'❤️', C:'📐', D:'🎯' };
+  const dims = ['A','B','C','D','E'];
+  const dimNames = { A:'自主性支持', B:'情感回应性', C:'规则与逻辑性', D:'压力与期望', E:'父母思维镜像' };
+  const dimEmojis = { A:'🧠', B:'❤️', C:'📐', D:'🎯', E:'🪞' };
   const avgs = dims.map(dim => {
     const scores = pathAData.map(d => d.scores[dim]).filter(s => s !== undefined && s !== null);
     if (scores.length === 0) return 0;
@@ -828,6 +837,37 @@ function renderDimScores(pathAData) {
   });
   card.innerHTML = html;
   container.appendChild(card);
+}
+
+// 模组解释弹窗
+const moduleInfo = {
+  '理性温室': '父母不仅给规则和自主权，而且本身思维理性、能接住子女的精神世界——这才是真正的"紫人孵化器"。高自主性 + 高情感回应 + 高规则逻辑 + 中等压力 + 高思维镜像。',
+  '权威高塔': '父母理性但极度冷漠高压，子女的理性是被"冻"出来的。低自主 + 低情感回应 + 高规则逻辑 + 高压力 + 高思维镜像。',
+  '自由孤岛': '父母既不理性也不关注子女内心，子女的理性是在真空中自己长出来的。高自主 + 低情感回应 + 低规则逻辑 + 低压力 + 低思维镜像。',
+  '混沌暖巢': '父母温暖但缺乏理性框架，子女的理性是为了对冲混乱而自我构建的。高情感回应 + 低规则逻辑 + 中等自主 + 中等压力 + 低思维镜像。',
+  '过渡/混合型': '不满足以上任何一种典型模式，呈现多元特征，是多种家庭力量博弈后的平衡态。'
+};
+
+function openModuleInfo() {
+  const modal = document.createElement('div');
+  modal.id = 'module-modal';
+  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;';
+  modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
+  let html = '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">';
+  html += '<div style="font-size:18px;font-weight:800;color:var(--primary-light);">🏠 家庭模组说明</div>';
+  html += '<button onclick="document.getElementById(\'module-modal\').remove()" style="background:none;border:none;color:var(--text-dim);font-size:20px;cursor:pointer;">✕</button>';
+  html += '</div>';
+  const modules = ['理性温室', '权威高塔', '自由孤岛', '混沌暖巢', '过渡/混合型'];
+  modules.forEach(m => {
+    html += `<div style="margin-bottom:16px;padding:12px;background:rgba(0,0,0,0.15);border-radius:10px;">`;
+    html += `<div style="font-weight:700;color:var(--primary-light);margin-bottom:4px;">${m}</div>`;
+    html += `<div style="font-size:13px;color:var(--text-muted);line-height:1.6;">${moduleInfo[m]}</div>`;
+    html += '</div>';
+  });
+  html += '</div>';
+  modal.innerHTML = html;
+  document.body.appendChild(modal);
 }
 
 async function loadFeedback() {
