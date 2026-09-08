@@ -275,6 +275,14 @@ textarea.text-input { min-height: 72px; }
   50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); }
 }
 /* Result page */
+.info-icon-survey {
+  display: inline-block; width: 18px; height: 18px; line-height: 18px;
+  text-align: center; border-radius: 50%;
+  background: rgba(168, 85, 247, 0.25); color: var(--primary-light);
+  font-size: 11px; cursor: pointer; margin-left: 6px; vertical-align: middle;
+  transition: all 0.2s;
+}
+.info-icon-survey:hover { background: rgba(168, 85, 247, 0.5); transform: scale(1.15); }
 .result-card {
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(168, 85, 247, 0.06));
   border: 1px solid var(--border-active);
@@ -1370,7 +1378,7 @@ function renderResult() {
   } else {
     // ---- 路径乙结果 ----
     if (r.trauma && r.trauma !== '无显著创伤归类') {
-      html += resultItem('🩸', '创伤印记', r.trauma);
+      html += resultItem('🩸', '创伤印记', r.trauma, false, 'openTraumaInfo()');
     }
     const q8 = state.answers.q8;
     if (q8 !== null && q8 !== undefined) {
@@ -1405,18 +1413,50 @@ function renderResult() {
   container.innerHTML = html;
 }
 
-function resultItem(icon, key, val, isQuote) {
-  return `
-    <div class="result-item">
-      <div class="result-icon">${icon}</div>
-      <div class="result-content">
-        <div class="result-key">${key}</div>
-        <div class="result-val ${isQuote ? 'quote' : ''}">${val || '—'}</div>
-      </div>
-    </div>`;
+function resultItem(icon, key, val, isQuote, infoFn) {
+const infoHtml = infoFn ? `<span class="info-icon-survey" onclick="${infoFn}" title="点击查看说明">ⓘ</span>` : '';
+return `
+<div class="result-item">
+<div class="result-icon">${icon}</div>
+<div class="result-content">
+<div class="result-key">${key} ${infoHtml}</div>
+<div class="result-val ${isQuote ? 'quote' : ''}">${val || '—'}</div>
+</div>
+</div>`;
 }
 
 // ==================== 辅助功能 ====================
+function openTraumaInfo() {
+  const traumaTypes = [
+    { num: '①', name: '权威压制型', desc: '长期被父母/师长打压贬低，想法永远被否定。在这种环境中长大的人，容易对权威既反抗又依赖。' },
+    { num: '②', name: '情感剥夺型', desc: '家庭冰冷，父母长期漠视你的内心感受。不是没人管你吃穿，而是没人看见你的情绪和需要。' },
+    { num: '③', name: '依附断裂型', desc: '重要亲人离世或被抛弃、长期分离。早年核心依恋关系的断裂，会在人格中留下深深的空洞。' },
+    { num: '④', name: '人际背叛型', desc: '霸凌、孤立或被信任的人恶意背叛。这类创伤让人对"关系"本身丧失信任，倾向于用距离保护自己。' },
+    { num: '⑤', name: '生存危机型', desc: '家庭经济崩盘或自身严重伤病意外。当生存本身受到威胁，理性往往被逼着提前成熟。' },
+    { num: '⑥', name: '信仰坍塌型', desc: '深信不疑的价值观被现实粉碎。不是外部创伤，而是内部意义系统的崩塌。' }
+  ];
+  const modal = document.createElement('div');
+  modal.id = 'trauma-modal';
+  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;';
+  modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
+  let html = '<div style="background:linear-gradient(135deg,#1a0f2e,#0d0b1a);border:1px solid rgba(168,85,247,0.3);border-radius:16px;padding:24px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">';
+  html += '<div style="font-size:18px;font-weight:800;color:var(--primary-light);">🩸 创伤印记说明</div>';
+  html += '<button onclick="document.getElementById(\'trauma-modal\').remove()" style="background:none;border:none;color:var(--text-dim);font-size:20px;cursor:pointer;">\u2715</button>';
+  html += '</div>';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6;">创伤印记是你选择的创伤性质组合，数字代表创伤类型编号：</div>';
+  traumaTypes.forEach(t => {
+    html += '<div style="margin-bottom:14px;padding:12px;background:rgba(139,92,246,0.08);border-radius:10px;border-left:3px solid var(--accent);">';
+    html += '<div style="font-weight:700;color:var(--primary-light);margin-bottom:4px;">' + t.num + ' ' + t.name + '</div>';
+    html += '<div style="font-size:13px;color:var(--text-muted);line-height:1.6;">' + t.desc + '</div>';
+    html += '</div>';
+  });
+  html += '<div style="font-size:12px;color:var(--text-dim);margin-top:8px;line-height:1.5;">提示：多个印记组合（如②+④）表示你同时经历了情感剥夺和人际背叛，两种创伤叠加影响更深。这只是基于你的自评分类，不是临床诊断。</div>';
+  html += '</div>';
+  modal.innerHTML = html;
+  document.body.appendChild(modal);
+}
+
 function showToast(msg) {
   const toast = document.getElementById('toast');
   toast.textContent = msg;
