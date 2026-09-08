@@ -918,7 +918,24 @@ async function loadFeedback() {
     } else {
       countEl.textContent = `共 ${rows.length} 条发言`;
       const likedSet = new Set(JSON.parse(localStorage.getItem('liked_comments') || '[]'));
-      const sorted = rows.filter(r => r.feedback && r.feedback.trim())
+
+      // 合并重复内容：相同文本的评论合并为一条，标注"多人附议"
+      const merged = {};
+      rows.forEach(r => {
+        if (!r.feedback || !r.feedback.trim()) return;
+        const key = r.feedback.trim();
+        if (!merged[key]) {
+          merged[key] = { ...r, agreeCount: 1, ids: [r.id] };
+        } else {
+          merged[key].agreeCount++;
+          merged[key].ids.push(r.id);
+          if ((r.likes || 0) > (merged[key].likes || 0)) {
+            merged[key].likes = r.likes || 0;
+            merged[key].id = r.id;
+          }
+        }
+      });
+      const sorted = Object.values(merged)
         .sort((a, b) => {
           const la = a.likes || 0, lb = b.likes || 0;
           if (lb !== la) return lb - la;
@@ -935,10 +952,11 @@ async function loadFeedback() {
         const likes = r.likes || 0;
         const isLiked = likedSet.has(r.id);
         const topBadge = (i === 0 && likes > 0) ? '<span class="top-badge">🔥 热门</span>' : '';
+        const agreeBadge = (r.agreeCount > 1) ? `<span class="top-badge" style="background:rgba(6,182,212,0.2);color:#06b6d4;border-color:rgba(6,182,212,0.3);">👥 ${r.agreeCount}人附议</span>` : '';
         item.innerHTML = `
           <div class="comment-meta">
             <div class="comment-avatar" style="background:${avatarColor}">${avatarChar}</div>
-            <span>紫人网友 · ${date}${topBadge}</span>
+            <span>紫人网友 · ${date}${topBadge}${agreeBadge}</span>
           </div>
           <div class="comment-text">${escapeHtml(r.feedback)}</div>
           <div class="comment-footer">
@@ -1025,6 +1043,26 @@ async function submitComment() {
   if (!text) { alert('请输入内容'); return; }
   if (text.length > 500) { alert('内容不能超过500字'); return; }
 
+  // 防止同一浏览器重复发布相同内容
+  const lastComments = JSON.parse(localStorage.getItem('last_comments') || '[]');
+  const lastCommentTime = localStorage.getItem('last_comment_time');
+  const now = Date.now();
+
+  // 30秒内禁止再次发布
+  if (lastCommentTime && now - parseInt(lastCommentTime) < 30000) {
+    const waitSec = Math.ceil((30000 - (now - parseInt(lastCommentTime))) / 1000);
+    alert(`发布太快了，请等待 ${waitSec} 秒后再试`);
+    return;
+  }
+
+  // 检查是否与最近5条发布内容重复
+  for (const prev of lastComments) {
+    if (text === prev.text) {
+      alert('你之前已经发布过相同的内容了，请勿重复发布');
+      return;
+    }
+  }
+
   btn.disabled = true;
   btn.textContent = '发布中...';
 
@@ -1044,6 +1082,12 @@ async function submitComment() {
     });
     clearTimeout(timer);
     if (resp.ok) {
+      // 记录本次发布内容到 localStorage
+      lastComments.push({ text: text, time: now });
+      if (lastComments.length > 10) lastComments.shift();
+      localStorage.setItem('last_comments', JSON.stringify(lastComments));
+      localStorage.setItem('last_comment_time', now.toString());
+
       input.value = '';
       btn.textContent = '已发布！';
       btn.style.background = '#10b981';
