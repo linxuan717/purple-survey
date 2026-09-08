@@ -1114,31 +1114,57 @@ async function submitComment() {
 loadStats();
 loadPageViews();
 
+// 手动解析 UTC 时间，转为北京时间（UTC+8），不依赖浏览器时区
+function getBeijingDate(utcStr) {
+  if (!utcStr) return null;
+  // 格式: 2026-09-08T13:44:22.123456+00:00 或 2026-09-08T13:44:22Z
+  const m = utcStr.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
+  if (!m) return null;
+  let year = parseInt(m[1]);
+  let month = parseInt(m[2]);
+  let day = parseInt(m[3]);
+  let hour = parseInt(m[4]) + 8; // UTC -> Beijing
+  let minute = parseInt(m[5]);
+  // 处理跨日
+  if (hour >= 24) { hour -= 24; day += 1; }
+  // 处理跨月（简化处理，足够用）
+  const daysInMonth = [31,28,31,30,31,30,31,31,30,31,30,31];
+  if (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)) daysInMonth[1] = 29;
+  if (day > daysInMonth[month - 1]) { day = 1; month += 1; }
+  if (month > 12) { month = 1; year += 1; }
+  return {
+    year: year,
+    month: month,
+    day: day,
+    hour: hour,
+    minute: minute,
+    dateStr: `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+  };
+}
+
 async function loadPageViews() {
   try {
     const rows = await fetchRows('page_views', 5000);
     const container = document.getElementById('charts');
     container.querySelectorAll('.page-views-card').forEach(el => el.remove());
 
+    // 用当前 UTC 时间 + 8 小时 = 北京时间今天
     const now = new Date();
-    const todayStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+    const nowUtcStr = now.toISOString();
+    const todayBeijing = getBeijingDate(nowUtcStr);
+    const todayStr = todayBeijing.dateStr;
 
     const todayCount = rows.filter(r => {
-      if (!r.created_at) return false;
-      const d = new Date(r.created_at);
-      const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-      return dateStr === todayStr;
+      const bj = getBeijingDate(r.created_at);
+      return bj && bj.dateStr === todayStr;
     }).length;
     const totalCount = rows.length;
 
     const hourly = new Array(24).fill(0);
     rows.forEach(r => {
-      if (r.created_at) {
-        const d = new Date(r.created_at);
-        const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-        if (dateStr === todayStr) {
-          hourly[d.getHours()]++;
-        }
+      const bj = getBeijingDate(r.created_at);
+      if (bj && bj.dateStr === todayStr) {
+        hourly[bj.hour]++;
       }
     });
     const maxHour = Math.max(...hourly, 1);
