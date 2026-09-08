@@ -1077,14 +1077,13 @@ async function loadPageViews() {
     container.querySelectorAll('.page-views-card').forEach(el => el.remove());
 
     const now = new Date();
-    const beijingNow = new Date(now.getTime() + 8 * 60 * 60 * 1000);
-    const todayStr = beijingNow.toISOString().slice(0, 10);
+    const todayStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
 
     const todayCount = rows.filter(r => {
       if (!r.created_at) return false;
       const d = new Date(r.created_at);
-      const beijing = new Date(d.getTime() + 8 * 60 * 60 * 1000);
-      return beijing.toISOString().slice(0, 10) === todayStr;
+      const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      return dateStr === todayStr;
     }).length;
     const totalCount = rows.length;
 
@@ -1092,9 +1091,9 @@ async function loadPageViews() {
     rows.forEach(r => {
       if (r.created_at) {
         const d = new Date(r.created_at);
-        const beijing = new Date(d.getTime() + 8 * 60 * 60 * 1000);
-        if (beijing.toISOString().slice(0, 10) === todayStr) {
-          hourly[beijing.getUTCHours()]++;
+        const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        if (dateStr === todayStr) {
+          hourly[d.getHours()]++;
         }
       }
     });
