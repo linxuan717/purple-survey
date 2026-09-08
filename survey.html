@@ -1156,22 +1156,24 @@ function calculatePathA() {
   const B_sum = L.B.B1 + L.B.B2 + L.B.B3 + B4Score + L.B.B5 + L.B.B6;
   const C_sum = L.C.C1 + L.C.C2 + L.C.C3 + L.C.C4;
   const D_sum = L.D.D1 + L.D.D2 + D3Score + L.D.D4;
+  const E_sum = L.E.E1 + L.E.E2;
 
   // 标准化为百分制
   const A_pct = (A_sum - 6) / 24 * 100;
   const B_pct = (B_sum - 6) / 24 * 100;
   const C_pct = (C_sum - 4) / 16 * 100;
   const D_pct = (D_sum - 4) / 16 * 100;
+  const E_pct = (E_sum - 2) / 8 * 100;
 
-  // 判定模组
+  // 判定模组（五维度）
   let module = '过渡/混合型';
-  if (A_pct > 70 && B_pct > 60 && C_pct > 70 && D_pct >= 40 && D_pct <= 70) {
+  if (A_pct > 70 && B_pct > 60 && C_pct > 70 && D_pct >= 40 && D_pct <= 70 && E_pct > 60) {
     module = '理性温室';
-  } else if (A_pct < 40 && B_pct < 40 && C_pct > 70 && D_pct > 70) {
+  } else if (A_pct < 40 && B_pct < 40 && C_pct > 70 && D_pct > 70 && E_pct > 60) {
     module = '权威高塔';
-  } else if (A_pct > 70 && B_pct < 40 && C_pct < 40 && D_pct < 40) {
+  } else if (A_pct > 70 && B_pct < 40 && C_pct < 40 && D_pct < 40 && E_pct < 40) {
     module = '自由孤岛';
-  } else if (B_pct > 70 && C_pct < 40 && A_pct >= 40 && A_pct <= 70 && D_pct >= 40 && D_pct <= 70) {
+  } else if (B_pct > 70 && C_pct < 40 && A_pct >= 40 && A_pct <= 70 && D_pct >= 40 && D_pct <= 70 && E_pct < 60) {
     module = '混沌暖巢';
   }
 
@@ -1182,10 +1184,10 @@ function calculatePathA() {
 
   // 分析文本
   const analysisMap = {
-    '理性温室': '你的紫人底色，与家庭的"高自主性"高度相关。在紫人数据中，你的家庭画像属于最典型的孵化器——规则清晰、自主空间大、情感回应尚可，理性是被"允许"和"鼓励"生长出来的。',
-    '权威高塔': '你的理性，可能是在高压规则下"长出来的铠甲"——规则清晰但自主空间极有限，期望极高且情感回应缺失。理性成为了你在权威结构中生存的工具，而非自由选择的表达。',
-    '自由孤岛': '你的抽离感，或许源于"自由但孤独"的成长环境——自主性极高，但情感回应严重缺位，规则模糊。你习惯了自己跟自己对话，理性是你唯一的陪伴语言。',
-    '混沌暖巢': '你的理性，可能是在"温暖但混乱"的家庭中发展出的自我保护机制——情感充沛但规则缺失、期望模糊。你用逻辑为自己建立了内在秩序，以对抗外在的不可预测。',
+    '理性温室': '你的紫人底色，与家庭的"高自主性 + 高思维镜像"高度相关。在紫人数据中，你的家庭画像属于最典型的孵化器——规则清晰、自主空间大、情感回应尚可，更重要的是父母本身思维理性、能接住你的精神世界。理性是被"允许"和"鼓励"生长出来的。',
+    '权威高塔': '你的理性，可能是在高压规则下"长出来的铠甲"——规则清晰但自主空间极有限，期望极高且情感回应缺失。父母本身理性但冷漠高压，你的理性是被"冻"出来的，是在权威结构中生存的工具。',
+    '自由孤岛': '你的抽离感，或许源于"自由但孤独"的成长环境——自主性极高，但情感回应严重缺位，规则模糊，父母既不理性也不关注你的内心。你习惯了自己跟自己对话，理性是你在真空中自己长出来的陪伴语言。',
+    '混沌暖巢': '你的理性，可能是在"温暖但混乱"的家庭中发展出的自我保护机制——情感充沛但规则缺失、期望模糊，父母温暖但缺乏理性框架。你用逻辑为自己建立了内在秩序，以对抗外在的不可预测。',
     '过渡/混合型': '你的家庭画像呈现多元特征，既有某些维度的支持，也有另一些维度的缺失。紫人的底色，可能是多种家庭力量博弈后的平衡态——既有被允许的部分，也有被逼出来的部分。',
   };
 
@@ -1197,11 +1199,11 @@ function calculatePathA() {
     module: module,
     niche: niche,
     analysis: analysisMap[module],
-    scores: { A: A_pct, B: B_pct, C: C_pct, D: D_pct },
+    scores: { A: A_pct, B: B_pct, C: C_pct, D: D_pct, E: E_pct },
     path: 'A',
     parents: parents,
     siblings: siblings,
-    rawScores: { A: A_sum, B: B_sum, C: C_sum, D: D_sum },
+    rawScores: { A: A_sum, B: B_sum, C: C_sum, D: D_sum, E: E_sum },
   };
 }
 
@@ -1319,19 +1321,20 @@ function renderResult() {
     html += `<div style="margin:12px 0 16px;padding:12px 16px;background:rgba(168,85,247,0.08);border-radius:10px;font-size:14px;color:var(--text-muted);border-left:3px solid var(--primary);">${linkageText}</div>`;
 
     // ---- 维度得分 vs 常模 ----
-    const norm = { A: 20, B: 17, C: 13, D: 12 };
-    const maxScores = { A: 30, B: 30, C: 20, D: 20 };
+    const norm = { A: 20, B: 17, C: 13, D: 12, E: 7 };
+    const maxScores = { A: 30, B: 30, C: 20, D: 20, E: 10 };
     const dimNames = {
       A: { label: '自主性支持', emoji: '🧠' },
       B: { label: '情感回应性', emoji: '❤️' },
       C: { label: '规则与逻辑性', emoji: '📐' },
-      D: { label: '压力与期望', emoji: '🎯' }
+      D: { label: '压力与期望', emoji: '🎯' },
+      E: { label: '父母思维镜像', emoji: '🪞' }
     };
-    const raw = r.rawScores || { A: 0, B: 0, C: 0, D: 0 };
+    const raw = r.rawScores || { A: 0, B: 0, C: 0, D: 0, E: 0 };
 
     html += '<div style="margin:16px 0;padding:16px;background:rgba(0,0,0,0.15);border-radius:12px;">';
     html += '<div style="font-size:13px;color:var(--text-dim);margin-bottom:12px;font-weight:600;">📊 各维度得分对比（紫人常模）</div>';
-    ['A','B','C','D'].forEach(dim => {
+    ['A','B','C','D','E'].forEach(dim => {
       const userScore = raw[dim];
       const avg = norm[dim];
       const max = maxScores[dim];
