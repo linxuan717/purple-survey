@@ -72,7 +72,11 @@ body {
   line-height: 1.4; word-break: break-all;
 }
 .bar-row-long { margin-bottom: 14px; }
-.bar-label-long { font-size: 13px; color: var(--text); line-height: 1.4; margin-bottom: 6px; word-break: break-all; }
+.bar-label-long {
+  font-size: 13px; color: var(--text); line-height: 1.5;
+  margin-bottom: 6px; word-break: break-all; overflow-wrap: break-word;
+  white-space: normal; width: 100%;
+}
 .bar-row-inner { display: flex; align-items: center; gap: 8px; }
 .bar-track {
   flex: 1; height: 24px; background: rgba(168,85,247,0.08);
@@ -472,8 +476,8 @@ function renderStats(data) {
   renderDonut('Q3 · 性别分布', countBy(data, 'gender'), COLORS);
   const q4c = {};
   data.forEach(d => { if (d.tierScore) { const s = d.tierScore+'分'; q4c[s]=(q4c[s]||0)+1; }});
-  const q4o = {}; for(let i=1;i<=10;i++){const k=i+'分';if(q4c[k])q4o[k]=q4c[k];}
-  renderBar('Q4 · 物质生活自评（1~10分）', q4o);
+  const q4o = {}; for(let i=1;i<=10;i++){const k=i+'分';q4o[k]=q4c[k]||0;}
+  renderBar('Q4 · 物质生活自评（1~10分）', q4o, false, null, true);
   renderDonut('当前生态位分布', countBy(data, 'tier'), COLORS);
   renderBar('Q5a · 父母情况', countBy(data, 'parents'), true);
   renderBar('Q5b · 兄弟姐妹情况', countBy(data, 'siblings'));
@@ -501,8 +505,8 @@ function renderStats(data) {
     renderMultiSelect(pathBData, 'q7', 'Q7 · 青春期重大事件');
     const q8c = {};
     pathBData.forEach(d => { if(d.q8){q8c[d.q8+'分']=(q8c[d.q8+'分']||0)+1;}});
-    const q8o = {}; for(let i=1;i<=5;i++){const k=i+'分';if(q8c[k])q8o[k]=q8c[k];}
-    renderBar('Q8 · "理性是为了保护自己"认同度（1~5分）', q8o, true);
+    const q8o = {}; for(let i=1;i<=5;i++){const k=i+'分';q8o[k]=q8c[k]||0;}
+    renderBar('Q8 · "理性是为了保护自己"认同度（1~5分）', q8o, true, null, true);
     renderBar('Q9 · 是否有心理创伤经历', countBy(pathBData, 'q9'), true);
     renderMultiSelect(pathBData, 'q10', 'Q10 · 创伤性质分布');
 
@@ -754,8 +758,11 @@ function renderSectionHeader(title) {
   container.appendChild(div);
 }
 
-function renderBar(title, counts, warm, infoFn) {
-  const entries = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+function renderBar(title, counts, warm, infoFn, keepOrder) {
+  let entries = Object.entries(counts);
+  if (!keepOrder) {
+    entries = entries.sort((a,b) => b[1]-a[1]);
+  }
   if (entries.length === 0) return;
   const maxVal = Math.max(...entries.map(e => e[1]));
   const fillClass = warm ? 'bar-fill warm' : 'bar-fill';
@@ -765,7 +772,7 @@ function renderBar(title, counts, warm, infoFn) {
   const infoHtml = infoFn ? `<span class="info-icon" onclick="${infoFn}" title="点击查看说明">ⓘ</span>` : '';
   let html = `<div class="chart-title">${title} ${infoHtml}</div>`;
   entries.forEach(([label, val]) => {
-    const pct = Math.round(val / maxVal * 100);
+    const pct = maxVal > 0 ? Math.round(val / maxVal * 100) : 0;
     html += `<div class="bar-row-long"><div class="bar-label-long">${escapeHtml(label)}</div><div class="bar-row-inner"><div class="bar-track"><div class="${fillClass}" style="width:${pct}%"></div></div><div class="bar-value">${val}</div></div></div>`;
   });
   card.innerHTML = html;
