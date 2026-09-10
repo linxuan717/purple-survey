@@ -381,7 +381,7 @@ async function exportCSV() {
   }
 }
 
-async function fetchWithTimeout(url, options = {}, timeout = 12000) {
+async function fetchWithTimeout(url, options = {}, timeout = 15000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
   try {
@@ -403,6 +403,14 @@ async function fetchRows(table, limit=1000, selectCols=null) {
   const pageSize = 1000;
   const loadingEl = document.getElementById('loading-text');
   const selectParam = selectCols ? `&select=${selectCols}` : '';
+  let slowTimer = null;
+  if (loadingEl) {
+    slowTimer = setTimeout(() => {
+      if (allRows.length === 0) {
+        loadingEl.textContent = '加载较慢，请稍候或刷新重试...';
+      }
+    }, 8000);
+  }
   while (offset < realTotal) {
     const fetchSize = Math.min(pageSize, realTotal - offset);
     if (loadingEl) loadingEl.textContent = `正在加载数据... ${allRows.length}/${realTotal}`;
@@ -429,6 +437,7 @@ async function fetchRows(table, limit=1000, selectCols=null) {
     offset += pageSize;
     if (offset < realTotal) await new Promise(r => setTimeout(r, 200));
   }
+  if (slowTimer) clearTimeout(slowTimer);
   return allRows;
 }
 
@@ -456,7 +465,7 @@ async function loadStats() {
   try {
     const surveySelect = 'mbti,age_group,gender,tier_score,tier,parents,siblings,path,evolution_type,family_module,trauma,q7,q8,q9,q10,q11,q12,q13,q14,created_at';
     const rows = await fetchRows('survey_results', 1000, surveySelect);
-    const realTotal = await fetchCount('survey_results');
+    const realTotal = rows.length;
     if (!rows || rows.length === 0) {
       document.getElementById('loading').style.display = 'none';
       document.getElementById('empty').style.display = 'block';
