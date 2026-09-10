@@ -430,6 +430,7 @@ async function loadStats() {
       trauma: r.trauma || '',
       m1: r.m1 || [], m2: r.m2 || [], m3: r.m3 || [], m4: r.m4 || [],
       q7: r.q7 || [], q8: r.q8 || 0, q9: r.q9 || '', q10: r.q10 || [],
+      q11: r.q11 || '', q12: r.q12 || '', q13: r.q13 || '', q14: r.q14 || 0,
       created_at: r.created_at || '',
     }));
     allData = data;
@@ -530,6 +531,51 @@ function renderStats(data) {
     renderMultiSelect(pathBData, 'q10', 'Q10 · 创伤性质分布');
 
     renderTraumaAnalysis(pathBData, pathAData);
+
+    // 轻量家庭模块统计（Q11-Q14）
+    const hasFamilyBg = pathBData.some(d => d.q11 || d.q12 || d.q13 || d.q14);
+    if (hasFamilyBg) {
+      renderSectionHeader('🏠 路径乙：家庭底色参考');
+      renderBar('Q11 · 12岁前家庭氛围', countBy(pathBData.filter(d => d.q11), 'q11'), true);
+      renderBar('Q12 · 向家人倾诉感受', countBy(pathBData.filter(d => d.q12), 'q12'), true);
+      renderBar('Q13 · 对"家"的整体感受', countBy(pathBData.filter(d => d.q13), 'q13'), true);
+      const q14c = {};
+      pathBData.forEach(d => { if(d.q14){q14c[d.q14+'分']=(q14c[d.q14+'分']||0)+1;}});
+      const q14o = {}; for(let i=1;i<=5;i++){const k=i+'分';q14o[k]=q14c[k]||0;}
+      renderBar('Q14 · 家庭对性格影响程度（1~5分）', q14o, true, null, true);
+
+      // 交叉洞察：家庭底色 vs 创伤类型
+      const q11Trauma = {};
+      pathBData.forEach(d => {
+        if (d.q11 && d.trauma) {
+          if (!q11Trauma[d.q11]) q11Trauma[d.q11] = {};
+          q11Trauma[d.q11][d.trauma] = (q11Trauma[d.q11][d.trauma] || 0) + 1;
+        }
+      });
+      const insightParts = [];
+      Object.keys(q11Trauma).forEach(atm => {
+        const traumas = q11Trauma[atm];
+        let maxT = '', maxN = 0;
+        Object.keys(traumas).forEach(t => { if (traumas[t] > maxN) { maxN = traumas[t]; maxT = t; } });
+        if (maxN >= 2) insightParts.push(`"${atm}"家庭的后天型紫人中，创伤类型以"${maxT}"居多（${maxN}人）`);
+      });
+      // Q14 vs Q8 关联
+      const q14High = pathBData.filter(d => d.q14 >= 4);
+      const q14Low = pathBData.filter(d => d.q14 <= 2);
+      const q8AvgHigh = q14High.length > 0 ? (q14High.reduce((s,d) => s + (d.q8||0), 0) / q14High.length).toFixed(1) : null;
+      const q8AvgLow = q14Low.length > 0 ? (q14Low.reduce((s,d) => s + (d.q8||0), 0) / q14Low.length).toFixed(1) : null;
+      if (q8AvgHigh && q8AvgLow) {
+        insightParts.push(`家庭影响程度≥4分的人，Q8防御性理性指数平均${q8AvgHigh}分；影响程度≤2分的人平均${q8AvgLow}分`);
+      }
+      if (insightParts.length > 0) {
+        renderSectionHeader('💡 家庭底色数据洞察');
+        const insight = document.createElement('div');
+        insight.className = 'chart-card';
+        insight.style.borderLeft = '3px solid var(--accent)';
+        insight.innerHTML = insightParts.map(p => `<div style="margin-bottom:8px;font-size:13px;color:var(--text-muted);line-height:1.6;">• ${p}</div>`).join('');
+        document.getElementById('charts').appendChild(insight);
+      }
+    }
   }
 }
 
