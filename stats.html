@@ -442,8 +442,7 @@ function showError(msg) {
 function retryLoad() {
   document.getElementById('error').style.display = 'none';
   document.getElementById('loading').style.display = 'block';
-  loadStats();
-  loadPageViews();
+  loadStats().then(() => { loadPageViews(); });
 }
 
 function countBy(data, key) {
@@ -1120,8 +1119,7 @@ async function submitComment() {
   }
 }
 
-loadStats();
-loadPageViews();
+loadStats().then(() => { loadPageViews(); });
 
 // 手动解析 UTC 时间，转为北京时间（UTC+8），不依赖浏览器时区
 function getBeijingDate(utcStr) {
