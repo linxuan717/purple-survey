@@ -373,9 +373,12 @@ async function fetchWithTimeout(url, options = {}, timeout = 12000) {
 }
 
 async function fetchRows(table, limit=1000) {
-  const url = `${SUPABASE_URL}/rest/v1/${table}?order=created_at.desc&limit=${limit}`;
+  let allRows = [];
+  let offset = 0;
+  const pageSize = 1000;
   let lastErr;
-  for (let i = 0; i < 3; i++) {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const url = `${SUPABASE_URL}/rest/v1/${table}?order=created_at.desc&limit=${pageSize}&offset=${offset}`;
     try {
       const resp = await fetchWithTimeout(url, {
         headers: {
@@ -384,18 +387,24 @@ async function fetchRows(table, limit=1000) {
         }
       });
       if (!resp.ok) throw new Error(`服务器错误 ${resp.status}`);
-      return resp.json();
+      const batch = await resp.json();
+      allRows = allRows.concat(batch);
+      if (batch.length < pageSize) break;
+      offset += pageSize;
+      if (offset >= limit) break;
     } catch (e) {
       lastErr = e;
-      if (i < 2) await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+      if (attempt < 2) await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+      else break;
     }
   }
-  throw lastErr;
+  if (allRows.length === 0 && lastErr) throw lastErr;
+  return allRows.slice(0, limit);
 }
 
 async function loadStats() {
   try {
-    const rows = await fetchRows('survey_results', 1000);
+    const rows = await fetchRows('survey_results', 5000);
     if (!rows || rows.length === 0) {
       document.getElementById('loading').style.display = 'none';
       document.getElementById('empty').style.display = 'block';
@@ -1144,7 +1153,7 @@ function getBeijingDate(utcStr) {
 
 async function loadPageViews() {
   try {
-    const rows = await fetchRows('page_views', 5000);
+    const rows = await fetchRows('page_views', 50000);
     const container = document.getElementById('charts');
     container.querySelectorAll('.page-views-card').forEach(el => el.remove());
 
