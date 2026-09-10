@@ -1233,9 +1233,9 @@ async function loadPageViews() {
     // 用过滤查询拿今日真实总数（不受1000条限制影响）
     let todayCount = 0;
     try {
-      const todayStart = todayStr + 'T00:00:00+08:00';
-      const todayEnd = todayStr + 'T23:59:59+08:00';
-      const countUrl = `${SUPABASE_URL}/rest/v1/page_views?select=id&limit=1&created_at=gte.${todayStart}&created_at=lte.${todayEnd}`;
+      const todayStart = todayStr + 'T00:00:00Z';
+      const todayEnd = todayStr + 'T23:59:59Z';
+      const countUrl = `${SUPABASE_URL}/rest/v1/page_views?select=id&limit=1&created_at=gte.${encodeURIComponent(todayStart)}&created_at=lte.${encodeURIComponent(todayEnd)}`;
       const countResp = await fetchWithTimeout(countUrl, {
         headers: {
           'apikey': SUPABASE_KEY,
