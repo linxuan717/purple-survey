@@ -403,6 +403,7 @@ async function fetchRows(table, limit=1000, selectCols=null) {
   const pageSize = 1000;
   const loadingEl = document.getElementById('loading-text');
   const selectParam = selectCols ? `&select=${selectCols}` : '';
+  const startTime = Date.now();
   let slowTimer = null;
   if (loadingEl) {
     slowTimer = setTimeout(() => {
@@ -413,7 +414,20 @@ async function fetchRows(table, limit=1000, selectCols=null) {
   }
   while (offset < realTotal) {
     const fetchSize = Math.min(pageSize, realTotal - offset);
-    if (loadingEl) loadingEl.textContent = `正在加载数据... ${allRows.length}/${realTotal}`;
+    if (loadingEl) {
+      const loaded = allRows.length;
+      const pct = Math.round((loaded / realTotal) * 100);
+      let eta = '';
+      if (loaded > 0) {
+        const elapsed = (Date.now() - startTime) / 1000;
+        const speed = loaded / elapsed;
+        const remaining = (realTotal - loaded) / speed;
+        if (remaining > 1) {
+          eta = `（预计还需${Math.ceil(remaining)}秒）`;
+        }
+      }
+      loadingEl.textContent = `正在加载数据... ${loaded}/${realTotal}（${pct}%）${eta}`;
+    }
     const url = `${SUPABASE_URL}/rest/v1/${table}?order=created_at.desc&limit=${fetchSize}&offset=${offset}${selectParam}`;
     let lastErr;
     for (let retry = 0; retry < 3; retry++) {
