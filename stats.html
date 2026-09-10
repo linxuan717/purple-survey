@@ -276,7 +276,7 @@ body {
 
   <div id="loading" class="loading">
     <div class="spinner"></div>
-    <p>正在加载统计数据...</p>
+    <p id="loading-text">正在加载统计数据...</p>
   </div>
 
   <div id="error" class="error-box" style="display:none">
@@ -376,24 +376,39 @@ async function fetchWithTimeout(url, options = {}, timeout = 12000) {
 }
 
 async function fetchRows(table, limit=1000) {
-  const url = `${SUPABASE_URL}/rest/v1/${table}?order=created_at.desc&limit=${limit}`;
-  let lastErr;
-  for (let i = 0; i < 3; i++) {
-    try {
-      const resp = await fetchWithTimeout(url, {
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
-        }
-      });
-      if (!resp.ok) throw new Error(`服务器错误 ${resp.status}`);
-      return resp.json();
-    } catch (e) {
-      lastErr = e;
-      if (i < 2) await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+  const realTotal = await fetchCount(table);
+  if (realTotal === 0) return [];
+  const allRows = [];
+  let offset = 0;
+  const pageSize = 1000;
+  const loadingEl = document.getElementById('loading-text');
+  while (offset < realTotal) {
+    const fetchSize = Math.min(pageSize, realTotal - offset);
+    if (loadingEl) loadingEl.textContent = `正在加载数据... ${allRows.length}/${realTotal}`;
+    const url = `${SUPABASE_URL}/rest/v1/${table}?order=created_at.desc&limit=${fetchSize}&offset=${offset}`;
+    let lastErr;
+    for (let retry = 0; retry < 3; retry++) {
+      try {
+        const resp = await fetchWithTimeout(url, {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Range': `${offset}-${offset + fetchSize - 1}`,
+          }
+        });
+        if (!resp.ok) throw new Error(`服务器错误 ${resp.status}`);
+        const batch = await resp.json();
+        allRows.push(...batch);
+        break;
+      } catch (e) {
+        lastErr = e;
+        if (retry < 2) await new Promise(r => setTimeout(r, 1000 * (retry + 1)));
+      }
     }
+    offset += pageSize;
+    if (offset < realTotal) await new Promise(r => setTimeout(r, 200));
   }
-  throw lastErr;
+  return allRows;
 }
 
 // 获取表的总记录数（不拉数据，只拿 count）
@@ -418,10 +433,8 @@ async function fetchCount(table) {
 
 async function loadStats() {
   try {
-    const [rows, realTotal] = await Promise.all([
-      fetchRows('survey_results', 5000),
-      fetchCount('survey_results')
-    ]);
+    const rows = await fetchRows('survey_results', 1000);
+    const realTotal = await fetchCount('survey_results');
     if (!rows || rows.length === 0) {
       document.getElementById('loading').style.display = 'none';
       document.getElementById('empty').style.display = 'block';
@@ -488,7 +501,7 @@ function renderStats(data) {
   const pathB = data.filter(d => d.path === 'B').length;
   const traumaCount = data.filter(d => d.evolutionType && d.evolutionType.includes('创伤')).length;
   const awakenCount = data.filter(d => d.evolutionType && d.evolutionType.includes('觉醒')).length;
-  const sampleNote = (currentFilter === 'all' && allRealTotal > data.length) ? `（图表基于最近${data.length}条）` : '';
+  const sampleNote = '';
 
   document.getElementById('stat-grid').innerHTML = `
     <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">总参与人数${sampleNote}</div></div>
@@ -1217,11 +1230,8 @@ function getBeijingDate(utcStr) {
 
 async function loadPageViews() {
   try {
-    // 只拉最近1000条算每小时趋势，用 fetchCount 拿真实总数
-    const [rows, totalCount] = await Promise.all([
-      fetchRows('page_views', 1000),
-      fetchCount('page_views')
-    ]);
+    const rows = await fetchRows('page_views', 1000);
+    const totalCount = await fetchCount('page_views');
     const container = document.getElementById('charts');
     container.querySelectorAll('.page-views-card').forEach(el => el.remove());
 
