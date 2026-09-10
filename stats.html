@@ -309,6 +309,8 @@ const COLORS = ['#a855f7','#8b5cf6','#7c3aed','#6d28d9','#5b21b6','#4c1d95','#c0
 const WARM = ['#f59e0b','#ef4444','#ec4899','#8b5cf6','#06b6d4','#10b981','#a855f7','#f97316'];
 
 let allData = [];
+let allRealTotal = 0;
+let currentRealTotal = 0;
 let currentFilter = 'all';
 
 function setFilter(filter) {
@@ -319,6 +321,7 @@ function setFilter(filter) {
   const container = document.getElementById('charts');
   container.innerHTML = '';
   const filtered = filter === 'all' ? allData : allData.filter(d => d.path === filter);
+  currentRealTotal = filter === 'all' ? allRealTotal : filtered.length;
   renderStats(filtered);
   loadFeedback();
   loadPageViews();
@@ -415,7 +418,10 @@ async function fetchCount(table) {
 
 async function loadStats() {
   try {
-    const rows = await fetchRows('survey_results', 5000);
+    const [rows, realTotal] = await Promise.all([
+      fetchRows('survey_results', 5000),
+      fetchCount('survey_results')
+    ]);
     if (!rows || rows.length === 0) {
       document.getElementById('loading').style.display = 'none';
       document.getElementById('empty').style.display = 'block';
@@ -434,6 +440,8 @@ async function loadStats() {
       created_at: r.created_at || '',
     }));
     allData = data;
+    allRealTotal = realTotal;
+    currentRealTotal = realTotal;
     document.getElementById('loading').style.display = 'none';
     document.getElementById('content').style.display = 'block';
     renderStats(data);
@@ -475,14 +483,15 @@ function avg(arr) {
 }
 
 function renderStats(data) {
-  const total = data.length;
+  const total = currentRealTotal > 0 ? currentRealTotal : data.length;
   const pathA = data.filter(d => d.path === 'A').length;
   const pathB = data.filter(d => d.path === 'B').length;
   const traumaCount = data.filter(d => d.evolutionType && d.evolutionType.includes('创伤')).length;
   const awakenCount = data.filter(d => d.evolutionType && d.evolutionType.includes('觉醒')).length;
+  const sampleNote = (currentFilter === 'all' && allRealTotal > data.length) ? `（图表基于最近${data.length}条）` : '';
 
   document.getElementById('stat-grid').innerHTML = `
-    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">总参与人数</div></div>
+    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">总参与人数${sampleNote}</div></div>
     <div class="stat-card"><div class="stat-num">${pathA}</div><div class="stat-label">原生型紫人</div></div>
     <div class="stat-card"><div class="stat-num">${pathB}</div><div class="stat-label">后天型紫人</div></div>
     <div class="stat-card"><div class="stat-num">${traumaCount}</div><div class="stat-label">创伤应激型</div></div>
@@ -1221,10 +1230,33 @@ async function loadPageViews() {
     const todayBeijing = getBeijingDate(nowUtcStr);
     const todayStr = todayBeijing.dateStr;
 
-    const todayCount = rows.filter(r => {
-      const bj = getBeijingDate(r.created_at);
-      return bj && bj.dateStr === todayStr;
-    }).length;
+    // 用过滤查询拿今日真实总数（不受1000条限制影响）
+    let todayCount = 0;
+    try {
+      const todayStart = todayStr + 'T00:00:00+08:00';
+      const todayEnd = todayStr + 'T23:59:59+08:00';
+      const countUrl = `${SUPABASE_URL}/rest/v1/page_views?select=id&limit=1&created_at=gte.${todayStart}&created_at=lte.${todayEnd}`;
+      const countResp = await fetchWithTimeout(countUrl, {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Prefer': 'count=exact',
+        }
+      });
+      if (countResp.ok) {
+        const range = countResp.headers.get('Content-Range') || '';
+        const m = range.match(/(\d+)$/);
+        if (m) todayCount = parseInt(m[1]);
+      }
+    } catch(e) { /* fall back to calculated count below */ }
+
+    // 如果精确查询失败，用行内过滤估算
+    if (todayCount === 0) {
+      todayCount = rows.filter(r => {
+        const bj = getBeijingDate(r.created_at);
+        return bj && bj.dateStr === todayStr;
+      }).length;
+    }
 
     const hourly = new Array(24).fill(0);
     rows.forEach(r => {
